@@ -1,46 +1,59 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --orange: #FC4C02;
-  --orange-light: #e84400;
-  --orange-dim: rgba(252, 76, 2, 0.10);
-  --bg: #f4f4f5;
-  --surface: #ffffff;
-  --surface2: #f0f0f1;
-  --border: #e2e2e5;
-  --text: #18181b;
-  --text-muted: #71717a;
-  --text-dim: #a1a1aa;
-  --green: #16a34a;
-  --yellow: #d97706;
-  --red: #dc2626;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --paper:       #faf7f2;
+  --paper-2:     #f4efe6;
+  --card:        #ffffff;
+  --ink:         #1a1614;
+  --ink-2:       #3d3633;
+  --ink-3:       #6b625d;
+  --ink-4:       #a8a098;
+  --rule:        #e8e1d4;
+  --rule-2:      #efeae0;
+
+  --brand:       #d94a1f;
+  --brand-soft:  #fdf1ec;
+  --signal:      #c8392a;
+  --signal-soft: #fbecea;
+  --moss:        #5a7a3f;
+  --moss-soft:   #eef2e6;
+  --amber:       #b88a2c;
+  --amber-soft:  #f7efde;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans:  'Inter', system-ui, sans-serif;
+
+  --radius: 8px;
+  --radius-sm: 5px;
+  --shadow: 0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--rule);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px var(--ink-4);
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-a { color: inherit; text-decoration: none; }
-
-button {
-  cursor: pointer;
-  font-family: inherit;
+/* Paper grain */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.018) 1px, transparent 0);
+  background-size: 3px 3px;
+  z-index: 0;
 }
 
-/* Scrollbar */
+#root { position: relative; z-index: 1; }
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: var(--sans); }
+
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--surface2); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }

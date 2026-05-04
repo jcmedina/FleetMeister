@@ -1,118 +1,139 @@
 import React from 'react';
-import { REPLACEMENT_KM } from '../analytics';
+import { REPLACEMENT_KM, shoeTypeLabel } from '../analytics';
+
+const TICKS = 20;
 
 export default function ShoeCard({ shoe, onClick }) {
   const { replacement } = shoe;
-  const pct = Math.min(replacement?.pct || 0, 1);
-  const barColor = replacement?.color || '#16a34a';
+  const limitKm = shoe.customLimitKm || REPLACEMENT_KM;
+  const ratio = Math.min((shoe.totalKm || 0) / limitKm, 1);
+  const filled = Math.round(ratio * TICKS);
+  const tickColor = replacement?.level === 'danger' ? 'var(--signal)'
+    : replacement?.level === 'warning' || replacement?.level === 'caution' ? 'var(--amber)'
+    : 'var(--moss)';
 
   return (
     <div
       onClick={onClick}
       style={{
-        background: 'var(--surface)',
-        border: `1px solid ${replacement?.level === 'danger' ? 'rgba(220,38,38,0.3)' : 'var(--border)'}`,
+        background: 'var(--card)',
         borderRadius: 'var(--radius)',
-        padding: '20px',
+        padding: '22px',
+        boxShadow: replacement?.level === 'danger'
+          ? `0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--signal)`
+          : 'var(--shadow)',
+        transition: 'all 0.2s',
         cursor: 'pointer',
-        transition: 'transform 0.12s, box-shadow 0.12s',
         position: 'relative',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow)',
       }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-      }}
+      onMouseOver={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
       onMouseOut={(e) => {
+        e.currentTarget.style.boxShadow = replacement?.level === 'danger' ? `0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--signal)` : 'var(--shadow)';
         e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = 'var(--shadow)';
       }}
     >
-      {shoe.retired && (
-        <span style={{
-          position: 'absolute', top: 12, right: 12,
-          background: 'var(--surface2)', color: 'var(--text-muted)',
-          fontSize: 11, padding: '2px 8px', borderRadius: 20,
-          border: '1px solid var(--border)',
-        }}>
-          Retired
-        </span>
+      {/* Replace flag */}
+      {replacement?.level === 'danger' && (
+        <div style={{
+          position: 'absolute', top: 22, right: 22,
+          fontFamily: 'var(--serif)', fontStyle: 'italic',
+          fontSize: 12, color: 'var(--signal)', fontWeight: 500,
+        }}>Replace now</div>
       )}
 
-      <div style={{ marginBottom: 14, paddingRight: shoe.retired ? 60 : 0 }}>
-        <h3 style={{
-          fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 3,
+      {/* Name */}
+      <div style={{ marginBottom: 18, paddingRight: replacement?.level === 'danger' ? 90 : 0 }}>
+        <div style={{
+          fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 600,
+          letterSpacing: '-0.01em', color: 'var(--ink)', lineHeight: 1.25,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {shoe.name || 'Unnamed Shoe'}
-        </h3>
-        {(shoe.brand_name || shoe.model_name) && (
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            {[shoe.brand_name, shoe.model_name].filter(Boolean).join(' ')}
-          </p>
+        </div>
+        {shoe.retired && (
+          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Retired</span>
         )}
       </div>
 
+      {/* Stats */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 8, marginBottom: 18,
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+        gap: 14, marginBottom: 18, paddingBottom: 18,
+        borderBottom: '1px solid var(--rule-2)',
       }}>
-        <Stat label="Kilometres" value={shoe.totalKm?.toFixed(0) || '0'} />
-        <Stat label="Runs" value={shoe.runCount || '0'} />
-        <Stat label="Avg Pace" value={shoe.medianPaceLabel || '—'} />
+        <Stat num={shoe.totalKm?.toFixed(0) || '0'} label="Kilometres" />
+        <Stat num={shoe.runCount || '0'} label="Runs" />
+        <Stat num={shoe.medianPaceLabel || '—'} label="Avg pace" small />
       </div>
 
-      <div>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          fontSize: 12, color: 'var(--text-muted)', marginBottom: 6,
+      {/* Progress */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{
+          fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 14, fontWeight: 500,
+          color: tickColor,
         }}>
-          <span style={{ color: barColor, fontWeight: 600 }}>{replacement?.label}</span>
-          <span>{shoe.totalKm?.toFixed(0)} / {REPLACEMENT_KM} km</span>
-        </div>
-        <div style={{
-          background: 'var(--surface2)', borderRadius: 4, height: 6, overflow: 'hidden',
-        }}>
-          <div style={{
-            width: `${pct * 100}%`, height: '100%', background: barColor,
-            borderRadius: 4, transition: 'width 0.6s ease',
+          {replacement?.label}
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+          <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{shoe.totalKm?.toFixed(0)}</strong> / {limitKm} km
+        </span>
+      </div>
+
+      {/* Tick bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 3, marginBottom: 14 }}>
+        {Array.from({ length: TICKS }, (_, i) => (
+          <div key={i} style={{
+            height: 6, borderRadius: 1,
+            background: i < filled ? tickColor : 'var(--rule)',
           }} />
-        </div>
+        ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-        {shoe.useType && <Tag label={shoe.useType} />}
-        {shoe.lastRunDate && <Tag label={`Last run ${formatDate(shoe.lastRunDate)}`} dim />}
+      {/* Tags */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {shoe.shoeType && <Tag label={shoeTypeLabel(shoe.shoeType) || shoe.shoeType} accent />}
+        {shoe.needsNudge && (
+          <Tag label={`${shoe.daysSinceLastRun}d idle`} warn />
+        )}
+        {shoe.lastRunDate && <Tag label={`Last run · ${formatDate(shoe.lastRunDate)}`} plain />}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }) {
+function Stat({ num, label, small }) {
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+    <div>
+      <span style={{
+        fontFamily: 'var(--serif)', fontSize: small ? 18 : 26,
+        fontWeight: 500, letterSpacing: '-0.02em', color: 'var(--ink)',
+        lineHeight: 1, display: 'block', marginBottom: 6,
+      }}>{num}</span>
+      <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', fontWeight: 600 }}>{label}</span>
     </div>
   );
 }
 
-function Tag({ label, dim = false }) {
+function Tag({ label, plain, accent, warn }) {
+  const bg = warn ? 'var(--amber-soft)'
+    : accent ? 'var(--brand-soft)'
+    : plain ? 'transparent'
+    : 'var(--paper-2)';
+  const color = warn ? 'var(--amber)'
+    : accent ? 'var(--brand)'
+    : 'var(--ink-3)';
+  const border = warn ? '1px solid var(--amber)'
+    : accent ? '1px solid var(--brand)'
+    : '1px solid var(--rule)';
   return (
     <span style={{
-      background: dim ? 'transparent' : 'var(--orange-dim)',
-      color: dim ? 'var(--text-dim)' : 'var(--orange)',
-      border: dim ? '1px solid var(--border)' : '1px solid rgba(252,76,2,0.2)',
-      borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 500,
-    }}>
-      {label}
-    </span>
+      fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em',
+      padding: '4px 9px', borderRadius: 3, fontWeight: 600,
+      border, color, background: bg,
+    }}>{label}</span>
   );
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

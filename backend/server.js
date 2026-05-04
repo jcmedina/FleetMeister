@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const axios = require('axios');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -132,14 +133,17 @@ app.get('/api/status', (req, res) => {
 
 // Athlete's registered gear (shoes)
 app.get('/api/gear', requireAuth, async (req, res) => {
+  const forceRefresh = req.query.refresh === 'true';
+
+  if (!forceRefresh && req.session.cache?.gear) {
+    return res.json(req.session.cache.gear);
+  }
+
   try {
     const token = await getValidToken(req.session);
     const response = await axios.get('https://www.strava.com/api/v3/athlete', {
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    console.log('Strava athlete keys:', Object.keys(response.data));
-    console.log('Shoes from Strava:', JSON.stringify(response.data.shoes));
 
     const shoes = (response.data.shoes || []).map((shoe) => ({
       id: shoe.id,
@@ -147,11 +151,14 @@ app.get('/api/gear', requireAuth, async (req, res) => {
       brand_name: shoe.brand_name,
       model_name: shoe.model_name,
       description: shoe.description,
-      distance: shoe.distance, // meters (Strava total)
+      distance: shoe.distance,
       converted_distance: shoe.converted_distance,
       retired: shoe.retired,
       primary: shoe.primary,
     }));
+
+    if (!req.session.cache) req.session.cache = {};
+    req.session.cache.gear = shoes;
 
     res.json(shoes);
   } catch (err) {
@@ -160,8 +167,45 @@ app.get('/api/gear', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Shoe Settings (SQLite) ──────────────────────────────────────────────────
+
+// Get all custom settings for the current athlete (returns map keyed by gear_id)
+app.get('/api/settings', requireAuth, (req, res) => {
+  try {
+    const settings = db.getAllForUser(req.session.athlete.id);
+    res.json(settings);
+  } catch (err) {
+    console.error('Settings fetch error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Save / update settings for one shoe
+app.put('/api/settings/:gear_id', requireAuth, (req, res) => {
+  try {
+    const { gear_id } = req.params;
+    const { type, custom_limit_km, nudge_days, retirement_note } = req.body;
+    db.upsert(req.session.athlete.id, gear_id, {
+      type:            type            ?? null,
+      custom_limit_km: custom_limit_km ? parseInt(custom_limit_km) : null,
+      nudge_days:      nudge_days      ? parseInt(nudge_days)      : null,
+      retirement_note: retirement_note ?? null,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Settings save error:', err.message);
+    res.status(500).json({ error: 'Failed to save settings' });
+  }
+});
+
 // All running activities (paginated, runs only)
 app.get('/api/activities', requireAuth, async (req, res) => {
+  const forceRefresh = req.query.refresh === 'true';
+
+  if (!forceRefresh && req.session.cache?.activities) {
+    return res.json(req.session.cache.activities);
+  }
+
   try {
     const token = await getValidToken(req.session);
     const allActivities = [];
@@ -201,6 +245,9 @@ app.get('/api/activities', requireAuth, async (req, res) => {
       if (batch.length < perPage) break;
       page++;
     }
+
+    if (!req.session.cache) req.session.cache = {};
+    req.session.cache.activities = allActivities;
 
     res.json(allActivities);
   } catch (err) {

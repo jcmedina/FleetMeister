@@ -1,127 +1,93 @@
 import React from 'react';
+import { Zap, HeartPulse, Mountain, Medal, Sparkles } from 'lucide-react';
 import { formatPace } from '../analytics';
 
 export default function Leaderboard({ shoes, onSelectShoe }) {
-  // Only consider non-retired shoes with at least 3 runs for rankings
   const active = shoes.filter((s) => !s.retired && s.runCount >= 3);
 
-  // ── Top 5 Fastest (by median pace, ascending = faster) ───────────────────
   const top5Fastest = [...active]
     .filter((s) => s.medianPace)
     .sort((a, b) => a.medianPace - b.medianPace)
     .slice(0, 5);
 
-  // ── Most Relaxing (by avg heart rate, ascending = lowest HR) ─────────────
   const top5Relaxing = [...active]
     .filter((s) => s.avgHeartRate)
     .sort((a, b) => a.avgHeartRate - b.avgHeartRate)
     .slice(0, 5);
 
-  // ── Awards ────────────────────────────────────────────────────────────────
   const bestLongRun = [...active]
     .filter((s) => s.avgLongRunPace && s.longRunCount >= 2)
     .sort((a, b) => a.avgLongRunPace - b.avgLongRunPace)[0] || null;
 
-  const bestSpeedSession = [...active]
+  const bestSpeed = [...active]
     .filter((s) => s.avgSpeedRunPace && s.speedRunCount >= 2)
     .sort((a, b) => a.avgSpeedRunPace - b.avgSpeedRunPace)[0] || null;
 
-  const mostUsed = [...active]
-    .sort((a, b) => b.runCount - a.runCount)[0] || null;
-
-  const freshest = [...active]
-    .sort((a, b) => a.totalKm - b.totalKm)[0] || null;
+  const mostUsed = [...active].sort((a, b) => b.runCount - a.runCount)[0] || null;
+  const freshest = [...active].sort((a, b) => a.totalKm - b.totalKm)[0] || null;
 
   const awards = [
-    bestLongRun && {
-      icon: '🏔',
-      title: 'Long Run King',
-      desc: 'Best avg pace on runs > 10km',
-      shoe: bestLongRun,
-      stat: bestLongRun.avgLongRunPaceLabel,
-    },
-    bestSpeedSession && {
-      icon: '⚡',
-      title: 'Speed Demon',
-      desc: 'Best avg pace on runs < 22km',
-      shoe: bestSpeedSession,
-      stat: bestSpeedSession.avgSpeedRunPaceLabel,
-    },
-    mostUsed && {
-      icon: '🏅',
-      title: 'Most Reliable',
-      desc: 'Your most-used shoe',
-      shoe: mostUsed,
-      stat: `${mostUsed.runCount} runs`,
-    },
-    freshest && {
-      icon: '✨',
-      title: 'Freshest Legs',
-      desc: 'Fewest km logged',
-      shoe: freshest,
-      stat: `${freshest.totalKm} km`,
-    },
+    bestLongRun && { icon: Mountain, label: 'Long Run King', title: bestLongRun.name, sub: 'Best avg pace, runs > 10 km', stat: bestLongRun.avgLongRunPaceLabel, shoe: bestLongRun },
+    bestSpeed   && { icon: Zap,      label: 'Speed Demon',   title: bestSpeed.name,   sub: 'Best avg pace, runs < 22 km', stat: bestSpeed.avgSpeedRunPaceLabel,   shoe: bestSpeed },
+    mostUsed    && { icon: Medal,     label: 'Most Reliable', title: mostUsed.name,   sub: 'Your most-used shoe',         stat: `${mostUsed.runCount} runs`,       shoe: mostUsed },
+    freshest    && { icon: Sparkles,  label: 'Freshest Legs', title: freshest.name,   sub: 'Fewest km logged',            stat: `${freshest.totalKm} km`,          shoe: freshest },
   ].filter(Boolean);
 
-  const hasData = top5Fastest.length > 0 || top5Relaxing.length > 0 || awards.length > 0;
-  if (!hasData) return null;
+  if (!top5Fastest.length && !top5Relaxing.length && !awards.length) return null;
 
   return (
-    <div style={{ marginBottom: 32 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>
-        Leaderboard
-      </h2>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-        gap: 16,
-        marginBottom: 24,
-      }}>
-        {/* Top 5 Fastest */}
-        {top5Fastest.length > 0 && (
-          <RankingCard
-            title="🏃 Fastest Shoes"
-            subtitle="By median pace (lower = faster)"
-            rows={top5Fastest.map((s, i) => ({
-              rank: i + 1,
-              label: s.name || 'Unnamed',
-              value: s.medianPaceLabel,
-              shoe: s,
-            }))}
-            onSelect={onSelectShoe}
-          />
-        )}
-
-        {/* Most Relaxing */}
-        {top5Relaxing.length > 0 && (
-          <RankingCard
-            title="😌 Most Relaxing"
-            subtitle="By avg heart rate (lower = more relaxed)"
-            rows={top5Relaxing.map((s, i) => ({
-              rank: i + 1,
-              label: s.name || 'Unnamed',
-              value: `${s.avgHeartRate} bpm`,
-              shoe: s,
-            }))}
-            onSelect={onSelectShoe}
-          />
-        )}
+    <div style={{ marginBottom: 56 }}>
+      {/* Leaderboard header */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }}>
+        <h2 style={{ fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em' }}>
+          The <em style={{ fontStyle: 'italic', fontWeight: 400 }}>leaderboard</em>
+        </h2>
+        <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>By the numbers</span>
       </div>
+
+      {/* Two ranking boards */}
+      {(top5Fastest.length > 0 || top5Relaxing.length > 0) && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: top5Fastest.length && top5Relaxing.length ? '1fr 1fr' : '1fr',
+          gap: 32, marginBottom: 40,
+        }}>
+          {top5Fastest.length > 0 && (
+            <Board
+              icon={<Zap size={16} />}
+              title="Fastest Shoes"
+              sub="Median pace · lower is faster"
+              rows={top5Fastest.map((s, i) => ({ rank: i + 1, name: s.name, stat: s.medianPaceLabel, shoe: s }))}
+              onSelect={onSelectShoe}
+            />
+          )}
+          {top5Relaxing.length > 0 && (
+            <Board
+              icon={<HeartPulse size={16} />}
+              title="Most Relaxing"
+              sub="Avg heart rate · lower is calmer"
+              rows={top5Relaxing.map((s, i) => ({ rank: i + 1, name: s.name, stat: `${s.avgHeartRate} bpm`, shoe: s }))}
+              onSelect={onSelectShoe}
+            />
+          )}
+        </div>
+      )}
 
       {/* Awards */}
       {awards.length > 0 && (
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
-            Awards
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Awards</h3>
+            <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Standing distinctions</span>
+          </div>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 12,
+            gridTemplateColumns: `repeat(${Math.min(awards.length, 4)}, 1fr)`,
+            gap: '1px', background: 'var(--rule)',
+            border: '1px solid var(--rule)', borderRadius: 4, overflow: 'hidden',
           }}>
-            {awards.map((award) => (
-              <AwardCard key={award.title} award={award} onSelect={onSelectShoe} />
+            {awards.map((a) => (
+              <AwardCell key={a.label} award={a} onSelect={onSelectShoe} />
             ))}
           </div>
         </div>
@@ -130,93 +96,81 @@ export default function Leaderboard({ shoes, onSelectShoe }) {
   );
 }
 
-function RankingCard({ title, subtitle, rows, onSelect }) {
-  const medals = ['🥇', '🥈', '🥉'];
-
+function Board({ icon, title, sub, rows, onSelect }) {
   return (
-    <div style={{
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius)',
-      overflow: 'hidden',
-      boxShadow: 'var(--shadow)',
-    }}>
-      <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{subtitle}</div>
+    <div style={{ borderTop: '1px solid var(--ink)', paddingTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+        <div style={{
+          fontFamily: 'var(--serif)', fontWeight: 600, fontSize: 17,
+          color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ color: 'var(--ink-3)' }}>{icon}</span> {title}
+        </div>
+        <span style={{ fontSize: 11, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{sub}</span>
       </div>
-      <div>
+      <ol style={{ listStyle: 'none' }}>
         {rows.map((row, i) => (
-          <div
+          <li
             key={i}
             onClick={() => onSelect(row.shoe)}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '11px 18px',
-              borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none',
-              cursor: 'pointer',
+              display: 'grid', gridTemplateColumns: '24px 1fr auto',
+              alignItems: 'center', padding: '11px 0',
+              borderBottom: i < rows.length - 1 ? '1px solid var(--rule-2)' : 'none',
+              gap: 12, cursor: 'pointer',
               transition: 'background 0.1s',
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface2)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <span style={{ fontSize: 18, width: 28, flexShrink: 0 }}>
-              {medals[i] || <span style={{ fontSize: 13, color: 'var(--text-dim)', fontWeight: 600 }}>{i + 1}</span>}
-            </span>
             <span style={{
-              flex: 1, fontSize: 14, fontWeight: i === 0 ? 600 : 400,
-              color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {row.label}
-            </span>
+              fontFamily: 'var(--serif)', fontStyle: i > 0 ? 'italic' : 'normal',
+              fontWeight: i === 0 ? 600 : 500, fontSize: 16,
+              color: i === 0 ? 'var(--brand)' : 'var(--ink-4)',
+            }}>{row.rank}</span>
+            <span style={{ fontSize: 14, color: 'var(--ink-2)' }}>{row.name || 'Unnamed'}</span>
             <span style={{
-              fontSize: 13, fontWeight: 600,
-              color: i === 0 ? 'var(--orange)' : 'var(--text-muted)',
-              flexShrink: 0, marginLeft: 8,
-            }}>
-              {row.value}
-            </span>
-          </div>
+              fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 16,
+              color: i === 0 ? 'var(--brand)' : 'var(--ink)',
+              letterSpacing: '-0.01em',
+            }}>{row.stat}</span>
+          </li>
         ))}
-      </div>
+      </ol>
     </div>
   );
 }
 
-function AwardCard({ award, onSelect }) {
+function AwardCell({ award, onSelect }) {
+  const Icon = award.icon;
   return (
     <div
       onClick={() => onSelect(award.shoe)}
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)',
-        padding: '16px',
-        cursor: 'pointer',
-        transition: 'box-shadow 0.12s, transform 0.12s',
-        boxShadow: 'var(--shadow)',
+        background: 'var(--paper)', padding: '22px 20px',
+        display: 'flex', flexDirection: 'column', gap: 12,
+        cursor: 'pointer', transition: 'background 0.2s',
       }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        e.currentTarget.style.transform = 'translateY(-1px)';
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow)';
-        e.currentTarget.style.transform = 'none';
-      }}
+      onMouseOver={(e) => e.currentTarget.style.background = 'var(--paper-2)'}
+      onMouseOut={(e) => e.currentTarget.style.background = 'var(--paper)'}
     >
-      <div style={{ fontSize: 28, marginBottom: 8 }}>{award.icon}</div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{award.title}</div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{award.desc}</div>
-      <div style={{
-        fontSize: 13, fontWeight: 600, color: 'var(--orange)',
-        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-      }}>
-        {award.shoe.name || 'Unnamed'}
-      </div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-        {award.stat}
+      <div style={{ color: 'var(--ink-2)' }}><Icon size={22} strokeWidth={1.5} /></div>
+      <div>
+        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', fontWeight: 600, marginBottom: 4 }}>
+          {award.label}
+        </div>
+        <div style={{
+          fontFamily: 'var(--serif)', fontSize: 17, fontWeight: 500,
+          letterSpacing: '-0.01em', color: 'var(--ink)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {award.title || 'Unknown'}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{award.sub}</div>
+        <div style={{
+          fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500,
+          color: 'var(--brand)', letterSpacing: '-0.02em', marginTop: 10,
+        }}>
+          {award.stat}
+        </div>
       </div>
     </div>
   );

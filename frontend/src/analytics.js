@@ -29,23 +29,37 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // ─── Replacement guidance ─────────────────────────────────────────────────────
 
-export const REPLACEMENT_KM = 650; // standard recommendation in km
+export const REPLACEMENT_KM = 650; // standard default in km
 
-export function getReplacementStatus(totalKm) {
-  const pct = totalKm / REPLACEMENT_KM;
-  if (pct >= 1.0) return { label: 'Replace Now', color: '#E74C3C', level: 'danger', pct: Math.min(pct, 1) };
-  if (pct >= 0.8) return { label: 'Replace Soon', color: '#F39C12', level: 'warning', pct };
-  if (pct >= 0.6) return { label: 'Getting There', color: '#F1C40F', level: 'caution', pct };
-  return { label: 'Good Shape', color: '#2ECC71', level: 'good', pct };
+export function getReplacementStatus(totalKm, limitKm = REPLACEMENT_KM) {
+  const pct = totalKm / limitKm;
+  if (pct >= 1.0) return { label: 'Replace Now', color: 'var(--signal)', level: 'danger', pct: Math.min(pct, 1), limitKm };
+  if (pct >= 0.8) return { label: 'Replace Soon', color: 'var(--amber)',  level: 'warning', pct, limitKm };
+  if (pct >= 0.6) return { label: 'Getting There', color: 'var(--amber)', level: 'caution', pct, limitKm };
+  return { label: 'Good Shape', color: 'var(--moss)', level: 'good', pct, limitKm };
 }
+
+// Shoe type display labels
+export const SHOE_TYPES = [
+  { value: 'daily',    label: 'Daily Trainer' },
+  { value: 'speed',    label: 'Speed / Tempo' },
+  { value: 'long_run', label: 'Long Run' },
+  { value: 'race_day', label: 'Race Day' },
+  { value: 'trail',    label: 'Trail' },
+  { value: 'recovery', label: 'Recovery' },
+  { value: 'other',    label: 'Other' },
+];
+
+export const shoeTypeLabel = (value) =>
+  SHOE_TYPES.find((t) => t.value === value)?.label || null;
 
 // ─── Main analytics function ──────────────────────────────────────────────────
 
 /**
- * Given the list of shoes (from /api/gear) and activities (from /api/activities),
- * returns an enriched array of shoe objects with analytics attached.
+ * Given the list of shoes (from /api/gear), activities (from /api/activities),
+ * and custom settings (from /api/settings), returns enriched shoe objects.
  */
-export function analyzeShoes(shoes, activities) {
+export function analyzeShoes(shoes, activities, settings = {}) {
   // Index activities by gear_id
   const byGear = {};
   for (const act of activities) {
@@ -55,6 +69,9 @@ export function analyzeShoes(shoes, activities) {
   }
 
   return shoes.map((shoe) => {
+    const shoeSettings = settings[shoe.id] || {};
+    const limitKm = shoeSettings.custom_limit_km || REPLACEMENT_KM;
+
     const runs = (byGear[shoe.id] || []).sort(
       (a, b) => new Date(a.start_date) - new Date(b.start_date)
     );
@@ -147,7 +164,7 @@ export function analyzeShoes(shoes, activities) {
       avgDist < 21 ? 'Long Run' : 'Ultra / Race';
 
     // ── Replacement status ────────────────────────────────────────────────────
-    const replacement = getReplacementStatus(totalKm);
+    const replacement = getReplacementStatus(totalKm, limitKm);
 
     // ── Best run ─────────────────────────────────────────────────────────────
     const fastestRun = paceTrend.length
@@ -157,6 +174,19 @@ export function analyzeShoes(shoes, activities) {
     const longestRun = runs.length
       ? runs.reduce((best, r) => (r.distance > (best?.distance || 0) ? r : best), null)
       : null;
+
+    // ── Nudge logic ──────────────────────────────────────────────────────────
+    const lastRunDate = runs[runs.length - 1]?.start_date_local?.slice(0, 10) || null;
+    let daysSinceLastRun = null;
+    let needsNudge = false;
+    if (lastRunDate) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      daysSinceLastRun = Math.floor((Date.now() - new Date(lastRunDate).getTime()) / msPerDay);
+      const nudgeDays = shoeSettings.nudge_days || null;
+      if (nudgeDays && daysSinceLastRun >= nudgeDays && !shoe.retired) {
+        needsNudge = true;
+      }
+    }
 
     return {
       ...shoe,
@@ -180,7 +210,14 @@ export function analyzeShoes(shoes, activities) {
       fastestRun,
       longestRunKm: longestRun ? parseFloat(metersToKm(longestRun.distance).toFixed(1)) : 0,
       firstRunDate: runs[0]?.start_date_local?.slice(0, 10) || null,
-      lastRunDate: runs[runs.length - 1]?.start_date_local?.slice(0, 10) || null,
+      lastRunDate,
+      // Settings-derived fields
+      shoeType:       shoeSettings.type            || null,
+      customLimitKm:  shoeSettings.custom_limit_km || null,
+      nudgeDays:      shoeSettings.nudge_days      || null,
+      retirementNote: shoeSettings.retirement_note || null,
+      daysSinceLastRun,
+      needsNudge,
     };
   });
 }

@@ -3,200 +3,187 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine,
 } from 'recharts';
-import { REPLACEMENT_KM, formatPace } from '../analytics';
+import { REPLACEMENT_KM, formatPace, SHOE_TYPES } from '../analytics';
 
-export default function ShoeDetail({ shoe, onBack }) {
-  const [paceView, setPaceView] = useState('trend');
+const TICKS = 20;
 
+export default function ShoeDetail({ shoe, onSaveSettings }) {
+  const [tab, setTab] = useState('trend');
   const {
     name, brand_name, model_name, description,
     totalKm, runCount, medianPaceLabel, medianPace,
-    paceTrend, dayOfWeek, distDist,
-    paceImprovement, useType, replacement,
-    fastestRun, longestRunKm, avgHeartRate,
-    avgLongRunPaceLabel, avgSpeedRunPaceLabel,
+    paceTrend, dayOfWeek, distDist, paceImprovement,
+    useType, replacement, fastestRun, longestRunKm,
+    avgHeartRate, avgLongRunPaceLabel, avgSpeedRunPaceLabel,
     firstRunDate, lastRunDate, retired,
+    shoeType, customLimitKm, nudgeDays, retirementNote,
   } = shoe;
 
-  const kmLeft = Math.max(0, REPLACEMENT_KM - totalKm);
+  const limitKm = customLimitKm || REPLACEMENT_KM;
+  const ratio  = Math.min((totalKm || 0) / limitKm, 1);
+  const filled = Math.round(ratio * TICKS);
+  const tickColor = replacement?.level === 'danger' ? 'var(--signal)'
+    : replacement?.level === 'warning' || replacement?.level === 'caution' ? 'var(--amber)'
+    : 'var(--moss)';
+  const kmLeft = Math.max(0, limitKm - totalKm);
 
   return (
     <div>
       {/* Hero */}
-      <div style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius)', padding: '28px', marginBottom: 20,
-        boxShadow: 'var(--shadow)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+      <div style={{ borderTop: '1px solid var(--ink)', paddingTop: 20, marginBottom: 36 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 700 }}>{name || 'Unnamed Shoe'}</h2>
-              {retired && (
-                <span style={{
-                  background: 'var(--surface2)', color: 'var(--text-muted)',
-                  fontSize: 11, padding: '2px 8px', borderRadius: 20,
-                  border: '1px solid var(--border)',
-                }}>Retired</span>
-              )}
-            </div>
+            <h1 style={{
+              fontFamily: 'var(--serif)', fontSize: 36, fontWeight: 600,
+              letterSpacing: '-0.02em', color: 'var(--ink)', marginBottom: 6,
+            }}>
+              {name || 'Unnamed Shoe'}
+              {retired && <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--ink-4)', fontWeight: 400, marginLeft: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Retired</span>}
+            </h1>
             {(brand_name || model_name) && (
-              <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                {[brand_name, model_name].filter(Boolean).join(' ')}
-              </p>
+              <p style={{ color: 'var(--ink-3)', fontSize: 15 }}>{[brand_name, model_name].filter(Boolean).join(' ')}</p>
             )}
-            {description && (
-              <p style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 6 }}>{description}</p>
-            )}
+            {description && <p style={{ color: 'var(--ink-4)', fontSize: 13, marginTop: 6 }}>{description}</p>}
             {firstRunDate && (
-              <p style={{ color: 'var(--text-dim)', fontSize: 12, marginTop: 8 }}>
+              <p style={{ color: 'var(--ink-4)', fontSize: 12, marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {firstRunDate} → {lastRunDate || 'now'}
               </p>
             )}
           </div>
 
-          <div style={{
-            background: `${replacement?.color}12`,
-            border: `1px solid ${replacement?.color}33`,
-            borderRadius: 12, padding: '16px 20px',
-            textAlign: 'center', minWidth: 160,
-          }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: replacement?.color }}>
+          {/* Replacement status */}
+          <div style={{ minWidth: 180 }}>
+            <div style={{
+              fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 20,
+              fontWeight: 500, color: tickColor, marginBottom: 6,
+            }}>
               {replacement?.label}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-              {kmLeft > 0 ? `~${kmLeft.toFixed(0)} km left` : 'Past recommended limit'}
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 3, marginBottom: 8 }}>
+              {Array.from({ length: TICKS }, (_, i) => (
+                <div key={i} style={{ height: 6, borderRadius: 1, background: i < filled ? tickColor : 'var(--rule)' }} />
+              ))}
             </div>
-            <MileageBar pct={replacement?.pct} color={replacement?.color} />
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
-              {totalKm?.toFixed(0)} / {REPLACEMENT_KM} km
+            <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+              <strong style={{ color: 'var(--ink-2)' }}>{totalKm?.toFixed(0)}</strong> / {limitKm} km
+              {kmLeft > 0 && <span style={{ color: 'var(--ink-4)', marginLeft: 6 }}>· ~{kmLeft.toFixed(0)} km left</span>}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Key stats */}
+      {/* Key stats grid */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-        gap: 12, marginBottom: 20,
+        display: 'grid', gridTemplateColumns: 'repeat(1px, 1fr)',
+        gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)',
+        borderRadius: 4, overflow: 'hidden', marginBottom: 36,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
       }}>
-        <StatCard label="Total Km" value={`${totalKm?.toFixed(1)}`} unit="km" />
-        <StatCard label="Total Runs" value={runCount} />
-        <StatCard label="Median Pace" value={medianPaceLabel} />
-        <StatCard label="Longest Run" value={`${longestRunKm}`} unit="km" />
-        {avgHeartRate && <StatCard label="Avg Heart Rate" value={`${avgHeartRate}`} unit="bpm" />}
-        {fastestRun && <StatCard label="Fastest Pace" value={fastestRun.paceLabel} unit="/km" small />}
-        {avgLongRunPaceLabel && <StatCard label="Long Run Pace" value={avgLongRunPaceLabel} small tooltip="Avg pace on runs > 10km" />}
-        {avgSpeedRunPaceLabel && <StatCard label="Speed Session" value={avgSpeedRunPaceLabel} small tooltip="Avg pace on runs < 22km" />}
-        <StatCard label="Use Type" value={useType} small />
-        {paceImprovement !== null && (
-          <StatCard
-            label="Pace Change"
-            value={paceImprovement > 0 ? `▼ ${formatPaceChange(paceImprovement)}` : `▲ ${formatPaceChange(-paceImprovement)}`}
-            color={paceImprovement > 0 ? 'var(--green)' : 'var(--red)'}
-            small
-            tooltip="Difference between first 5 and last 5 runs"
-          />
-        )}
+        {[
+          { num: `${totalKm?.toFixed(1)} km`, label: 'Total Distance' },
+          { num: runCount, label: 'Total Runs' },
+          { num: medianPaceLabel, label: 'Median Pace' },
+          { num: `${longestRunKm} km`, label: 'Longest Run' },
+          avgHeartRate && { num: `${avgHeartRate} bpm`, label: 'Avg Heart Rate' },
+          fastestRun && { num: fastestRun.paceLabel, label: 'Fastest Pace' },
+          avgLongRunPaceLabel && { num: avgLongRunPaceLabel, label: 'Long Run Pace', sub: '> 10 km' },
+          avgSpeedRunPaceLabel && { num: avgSpeedRunPaceLabel, label: 'Speed Session', sub: '< 22 km' },
+          { num: useType, label: 'Use Type' },
+          paceImprovement !== null && {
+            num: paceImprovement > 0 ? `▼ ${formatPaceChange(paceImprovement)}` : `▲ ${formatPaceChange(-paceImprovement)}`,
+            label: 'Pace Change',
+            color: paceImprovement > 0 ? 'var(--moss)' : 'var(--signal)',
+          },
+        ].filter(Boolean).map((s, i) => (
+          <div key={i} style={{ background: 'var(--paper)', padding: '18px 20px' }}>
+            <div style={{
+              fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500,
+              letterSpacing: '-0.02em', color: s.color || 'var(--ink)',
+              lineHeight: 1.1, marginBottom: 6,
+            }}>{s.num}</div>
+            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', fontWeight: 600 }}>
+              {s.label}{s.sub && <span style={{ color: 'var(--ink-4)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}> {s.sub}</span>}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Charts */}
-      <div style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow)',
-      }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', padding: '0 20px' }}>
+      <div>
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', marginBottom: 24 }}>
           {[
-            { key: 'trend', label: '📈 Pace Trend' },
-            { key: 'dow',   label: '🗓 Day of Week' },
-            { key: 'dist',  label: '📏 Distance' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setPaceView(tab.key)}
-              style={{
-                background: 'transparent', border: 'none',
-                borderBottom: paceView === tab.key ? '2px solid var(--orange)' : '2px solid transparent',
-                color: paceView === tab.key ? 'var(--text)' : 'var(--text-muted)',
-                padding: '14px 16px', fontSize: 13,
-                fontWeight: paceView === tab.key ? 600 : 400,
-                marginBottom: -1, cursor: 'pointer',
-              }}
-            >
-              {tab.label}
-            </button>
+            { key: 'trend',    label: 'Pace Trend' },
+            { key: 'dow',      label: 'Day of Week' },
+            { key: 'dist',     label: 'Distance' },
+            { key: 'settings', label: 'Settings' },
+          ].map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              background: 'transparent', border: 'none',
+              borderBottom: tab === t.key ? '2px solid var(--brand)' : '2px solid transparent',
+              color: tab === t.key ? 'var(--ink)' : 'var(--ink-3)',
+              padding: '10px 20px', fontSize: 13,
+              fontWeight: tab === t.key ? 600 : 400,
+              fontFamily: tab === t.key ? 'var(--serif)' : 'var(--sans)',
+              cursor: 'pointer', marginBottom: -1,
+            }}>{t.label}</button>
           ))}
         </div>
 
-        <div style={{ padding: '24px 20px' }}>
-          {paceView === 'trend' && <PaceTrendChart data={paceTrend} medianPace={medianPace} />}
-          {paceView === 'dow'   && <DayOfWeekChart data={dayOfWeek} />}
-          {paceView === 'dist'  && <DistributionChart data={distDist} />}
-        </div>
+        {tab === 'trend'    && <PaceTrendChart data={paceTrend} medianPace={medianPace} />}
+        {tab === 'dow'      && <DayOfWeekChart data={dayOfWeek} />}
+        {tab === 'dist'     && <DistributionChart data={distDist} />}
+        {tab === 'settings' && (
+          <SettingsPanel
+            shoe={shoe}
+            initialType={shoeType}
+            initialLimitKm={customLimitKm}
+            initialNudgeDays={nudgeDays}
+            initialRetirementNote={retirementNote}
+            onSave={onSaveSettings}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-// ─── Charts ───────────────────────────────────────────────────────────────────
+// ─── Charts ──────────────────────────────────────────────────────────────────
 
 function PaceTrendChart({ data, medianPace }) {
-  if (!data || data.length === 0) return <EmptyChart message="No pace data available" />;
+  if (!data?.length) return <EmptyChart message="No pace data available" />;
 
-  const CustomTooltip = ({ active, payload }) => {
+  const fmt = (v) => { const m = Math.floor(v/60); const s = Math.round(v%60); return `${m}:${s.toString().padStart(2,'0')}`; };
+  const paces = data.map(d => d.pace).filter(Boolean);
+  const domain = [Math.min(...paces)-20, Math.max(...paces)+20];
+
+  const Tip = ({ active, payload }) => {
     if (!active || !payload?.[0]) return null;
     const d = payload[0].payload;
     return (
-      <div style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 8, padding: '10px 14px', fontSize: 13,
-        boxShadow: 'var(--shadow-md)',
-      }}>
-        <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.name || `Run #${d.index}`}</div>
-        <div style={{ color: 'var(--orange)' }}>Pace: {d.paceLabel} /km</div>
-        <div style={{ color: 'var(--text-muted)' }}>{d.km} km · {d.date}</div>
-        {d.heartrate && <div style={{ color: 'var(--text-muted)' }}>❤ {Math.round(d.heartrate)} bpm</div>}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 14px', fontSize: 13 }}>
+        <div style={{ fontFamily: 'var(--serif)', fontWeight: 600, marginBottom: 4 }}>{d.name || `Run #${d.index}`}</div>
+        <div style={{ color: 'var(--brand)' }}>{d.paceLabel} /km</div>
+        <div style={{ color: 'var(--ink-3)' }}>{d.km} km · {d.date}</div>
+        {d.heartrate && <div style={{ color: 'var(--ink-3)' }}>❤ {Math.round(d.heartrate)} bpm</div>}
       </div>
     );
   };
 
-  const formatY = (val) => {
-    const mins = Math.floor(val / 60);
-    const secs = Math.round(val % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const paces = data.map((d) => d.pace).filter(Boolean);
-  const minPace = Math.min(...paces) - 20;
-  const maxPace = Math.max(...paces) + 20;
-
   return (
     <div>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        Pace per run — lower = faster · Median: <strong style={{ color: 'var(--orange)' }}>{formatY(medianPace)} /km</strong>
+      <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>
+        Pace per run · lower = faster · Median: <strong style={{ fontFamily: 'var(--serif)', color: 'var(--brand)' }}>{fmt(medianPace)} /km</strong>
       </p>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-          <XAxis
-            dataKey="index"
-            tick={{ fill: 'var(--text-dim)', fontSize: 11 }}
-            label={{ value: 'Run #', position: 'insideBottomRight', offset: -5, fill: 'var(--text-dim)', fontSize: 11 }}
-            axisLine={{ stroke: 'var(--border)' }} tickLine={false}
-          />
-          <YAxis
-            domain={[minPace, maxPace]} reversed tickFormatter={formatY}
-            tick={{ fill: 'var(--text-dim)', fontSize: 11 }}
-            axisLine={false} tickLine={false} width={45}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          {medianPace && (
-            <ReferenceLine y={medianPace} stroke="rgba(252,76,2,0.3)" strokeDasharray="4 4" />
-          )}
-          <Line
-            type="monotone" dataKey="pace" stroke="var(--orange)" strokeWidth={2}
-            dot={{ fill: 'var(--orange)', r: 3, strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: 'var(--orange-light)' }} connectNulls={false}
-          />
+          <XAxis dataKey="index" tick={{ fill: 'var(--ink-4)', fontSize: 11 }} axisLine={{ stroke: 'var(--rule)' }} tickLine={false} />
+          <YAxis domain={domain} reversed tickFormatter={fmt} tick={{ fill: 'var(--ink-4)', fontSize: 11 }} axisLine={false} tickLine={false} width={44} />
+          <Tooltip content={<Tip />} />
+          {medianPace && <ReferenceLine y={medianPace} stroke="rgba(217,74,31,0.3)" strokeDasharray="4 4" />}
+          <Line type="monotone" dataKey="pace" stroke="var(--brand)" strokeWidth={2}
+            dot={{ fill: 'var(--brand)', r: 3, strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: 'var(--brand)' }} connectNulls={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -204,33 +191,20 @@ function PaceTrendChart({ data, medianPace }) {
 }
 
 function DayOfWeekChart({ data }) {
-  if (!data || data.every((d) => d.count === 0)) return <EmptyChart message="No day-of-week data available" />;
-  const max = Math.max(...data.map((d) => d.count));
-
+  if (!data?.length || data.every(d => d.count === 0)) return <EmptyChart message="No data" />;
+  const max = Math.max(...data.map(d => d.count));
   return (
     <div>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        Which days you most often run in these shoes
-      </p>
+      <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Which days you most often run in these shoes</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-          <XAxis dataKey="day" tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-            axisLine={{ stroke: 'var(--border)' }} tickLine={false} />
-          <YAxis allowDecimals={false} tick={{ fill: 'var(--text-dim)', fontSize: 11 }}
-            axisLine={false} tickLine={false} width={28} />
-          <Tooltip
-            cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-            contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }}
-            formatter={(v) => [`${v} runs`, '']}
-            labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-          />
-          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell key={i}
-                fill={entry.count === max ? 'var(--orange)' : 'var(--surface2)'}
-                stroke={entry.count === max ? 'none' : 'var(--border)'}
-              />
-            ))}
+          <XAxis dataKey="day" tick={{ fill: 'var(--ink-3)', fontSize: 12 }} axisLine={{ stroke: 'var(--rule)' }} tickLine={false} />
+          <YAxis allowDecimals={false} tick={{ fill: 'var(--ink-4)', fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+          <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+            contentStyle={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, fontSize: 13 }}
+            formatter={(v) => [`${v} runs`, '']} labelStyle={{ fontFamily: 'var(--serif)', fontWeight: 600 }} />
+          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+            {data.map((e, i) => <Cell key={i} fill={e.count === max ? 'var(--brand)' : 'var(--rule)'} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -239,33 +213,20 @@ function DayOfWeekChart({ data }) {
 }
 
 function DistributionChart({ data }) {
-  if (!data || data.every((d) => d.count === 0)) return <EmptyChart message="No distance data available" />;
-  const max = Math.max(...data.map((d) => d.count));
-
+  if (!data?.length || data.every(d => d.count === 0)) return <EmptyChart message="No data" />;
+  const max = Math.max(...data.map(d => d.count));
   return (
     <div>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        Distance distribution — how far you typically run in these shoes
-      </p>
+      <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Distance distribution — how far you typically run in these shoes</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-          <XAxis dataKey="label" tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-            axisLine={{ stroke: 'var(--border)' }} tickLine={false} />
-          <YAxis allowDecimals={false} tick={{ fill: 'var(--text-dim)', fontSize: 11 }}
-            axisLine={false} tickLine={false} width={28} />
-          <Tooltip
-            cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-            contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }}
-            formatter={(v) => [`${v} runs`, '']}
-            labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-          />
-          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell key={i}
-                fill={entry.count === max ? 'var(--orange)' : 'var(--surface2)'}
-                stroke={entry.count === max ? 'none' : 'var(--border)'}
-              />
-            ))}
+          <XAxis dataKey="label" tick={{ fill: 'var(--ink-3)', fontSize: 12 }} axisLine={{ stroke: 'var(--rule)' }} tickLine={false} />
+          <YAxis allowDecimals={false} tick={{ fill: 'var(--ink-4)', fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+          <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+            contentStyle={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, fontSize: 13 }}
+            formatter={(v) => [`${v} runs`, '']} labelStyle={{ fontFamily: 'var(--serif)', fontWeight: 600 }} />
+          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+            {data.map((e, i) => <Cell key={i} fill={e.count === max ? 'var(--brand)' : 'var(--rule)'} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -273,44 +234,146 @@ function DistributionChart({ data }) {
   );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, unit, color, small, tooltip }) {
-  return (
-    <div title={tooltip} style={{
-      background: 'var(--surface)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', padding: '14px 16px', boxShadow: 'var(--shadow)',
-    }}>
-      <div style={{ fontSize: small ? 15 : 22, fontWeight: 700, color: color || 'var(--text)', lineHeight: 1.2 }}>
-        {value}
-        {unit && <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 4 }}>{unit}</span>}
-      </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {label}
-      </div>
-    </div>
-  );
-}
-
-function MileageBar({ pct, color }) {
-  return (
-    <div style={{ background: 'var(--surface2)', borderRadius: 4, height: 5, marginTop: 10, overflow: 'hidden' }}>
-      <div style={{ width: `${Math.min(pct || 0, 1) * 100}%`, height: '100%', background: color, borderRadius: 4 }} />
-    </div>
-  );
-}
-
 function EmptyChart({ message }) {
   return (
-    <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
+    <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-4)', fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 16 }}>
       {message}
     </div>
   );
 }
 
-function formatPaceChange(secDiff) {
-  const mins = Math.floor(Math.abs(secDiff) / 60);
-  const secs = Math.round(Math.abs(secDiff) % 60);
-  if (mins === 0) return `${secs}s /km`;
-  return `${mins}:${secs.toString().padStart(2, '0')} /km`;
+// ─── Settings Panel ───────────────────────────────────────────────────────────
+
+function SettingsPanel({ shoe, initialType, initialLimitKm, initialNudgeDays, initialRetirementNote, onSave }) {
+  const [type, setType] = useState(initialType || '');
+  const [limitKm, setLimitKm] = useState(initialLimitKm || '');
+  const [nudgeDays, setNudgeDays] = useState(initialNudgeDays || '');
+  const [retirementNote, setRetirementNote] = useState(initialRetirementNote || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+
+  const handleSave = async () => {
+    if (!onSave) return;
+    setSaving(true); setSaved(false); setSaveError(null);
+    try {
+      await onSave(shoe.id, {
+        type: type || null,
+        custom_limit_km: limitKm ? parseInt(limitKm) : null,
+        nudge_days: nudgeDays ? parseInt(nudgeDays) : null,
+        retirement_note: retirementNote || null,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      setSaveError('Failed to save. Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px', fontSize: 14,
+    border: '1px solid var(--rule)', borderRadius: 6,
+    background: 'var(--paper)', color: 'var(--ink)',
+    fontFamily: 'var(--sans)', outline: 'none', boxSizing: 'border-box',
+  };
+  const labelStyle = {
+    display: 'block', fontSize: 11, textTransform: 'uppercase',
+    letterSpacing: '0.08em', fontWeight: 600, color: 'var(--ink-3)',
+    marginBottom: 8,
+  };
+
+  return (
+    <div style={{ maxWidth: 480 }}>
+      {/* Shoe type */}
+      <div style={{ marginBottom: 28 }}>
+        <label style={labelStyle}>Shoe Type</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {SHOE_TYPES.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setType(type === t.value ? '' : t.value)}
+              style={{
+                padding: '7px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+                border: type === t.value ? '1.5px solid var(--brand)' : '1.5px solid var(--rule)',
+                background: type === t.value ? 'var(--brand)' : 'var(--paper)',
+                color: type === t.value ? '#fff' : 'var(--ink-2)',
+                fontFamily: 'var(--sans)', fontWeight: type === t.value ? 600 : 400,
+                transition: 'all 0.15s',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Custom mileage limit */}
+      <div style={{ marginBottom: 28 }}>
+        <label style={labelStyle}>Custom Mileage Limit (km)</label>
+        <input
+          type="number"
+          min="1"
+          placeholder={`Default: 650 km`}
+          value={limitKm}
+          onChange={(e) => setLimitKm(e.target.value)}
+          style={inputStyle}
+        />
+        <p style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 6 }}>
+          Override the standard 650 km replacement guide for this shoe.
+        </p>
+      </div>
+
+      {/* Nudge days */}
+      <div style={{ marginBottom: 28 }}>
+        <label style={labelStyle}>Nudge me after (days without a run)</label>
+        <input
+          type="number"
+          min="1"
+          placeholder="e.g. 14"
+          value={nudgeDays}
+          onChange={(e) => setNudgeDays(e.target.value)}
+          style={inputStyle}
+        />
+        <p style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 6 }}>
+          Get an alert on the dashboard if this shoe goes unused for this many days.
+        </p>
+      </div>
+
+      {/* Retirement note (only shown if shoe is retired) */}
+      {shoe.retired && (
+        <div style={{ marginBottom: 28 }}>
+          <label style={labelStyle}>Retirement Note</label>
+          <textarea
+            rows={3}
+            placeholder="Why did you retire these? What made them great?"
+            value={retirementNote}
+            onChange={(e) => setRetirementNote(e.target.value)}
+            style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
+          />
+        </div>
+      )}
+
+      {/* Save button */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        style={{
+          padding: '11px 28px', background: saving ? 'var(--ink-4)' : 'var(--brand)',
+          color: '#fff', border: 'none', borderRadius: 6, fontSize: 14,
+          fontFamily: 'var(--sans)', fontWeight: 600, cursor: saving ? 'default' : 'pointer',
+          transition: 'background 0.15s',
+        }}
+      >
+        {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save Settings'}
+      </button>
+      {saveError && <p style={{ color: 'var(--signal)', fontSize: 13, marginTop: 10 }}>{saveError}</p>}
+    </div>
+  );
+}
+
+function formatPaceChange(s) {
+  const m = Math.floor(Math.abs(s)/60); const sec = Math.round(Math.abs(s)%60);
+  return m === 0 ? `${sec}s /km` : `${m}:${sec.toString().padStart(2,'0')} /km`;
 }

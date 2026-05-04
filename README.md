@@ -2,6 +2,8 @@
 
 A local web app that connects to your Strava account to track running shoe usage, performance, and help you know when it's time for a new pair.
 
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) &nbsp; [Changelog](CHANGELOG.md)
+
 ## Features
 
 - **Pace trend** — see how your pace has evolved across every run in a shoe
@@ -81,7 +83,8 @@ Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
 - Make sure your shoes are registered in Strava at [strava.com/settings/gear](https://www.strava.com/settings/gear)
 - For a run to show up in shoe analytics, it must have a shoe selected when logged
-- The 400-mile replacement threshold is the standard running industry recommendation — you can change `REPLACEMENT_MILES` in `frontend/src/analytics.js`
+- The default replacement threshold is 650 km — you can override this per shoe in the Settings tab, or change the global default (`REPLACEMENT_KM`) in `frontend/src/analytics.js`
+- Strava data is cached in your session after the first load. Use the ↻ Refresh button on the dashboard to pull the latest from Strava.
 
 ---
 
@@ -90,23 +93,28 @@ Then open [http://localhost:5173](http://localhost:5173) in your browser.
 ```
 shoe411/
 ├── backend/
-│   ├── server.js        # Express server, Strava OAuth, API proxy
+│   ├── server.js        # Express server, Strava OAuth, API routes, session cache
+│   ├── db.js            # SQLite (node:sqlite) — custom shoe settings
+│   ├── shoe411.db       # Local database (auto-created on first run)
 │   ├── package.json
 │   └── .env.example
-└── frontend/
-    ├── src/
-    │   ├── App.jsx          # Root component, auth state
-    │   ├── analytics.js     # All data processing logic
-    │   ├── components/
-    │   │   ├── LoginPage.jsx
-    │   │   ├── Header.jsx
-    │   │   ├── Dashboard.jsx    # Shoe grid overview
-    │   │   ├── ShoeCard.jsx     # Per-shoe summary card
-    │   │   ├── ShoeDetail.jsx   # Full analytics view with charts
-    │   │   └── LoadingScreen.jsx
-    │   ├── index.css
-    │   └── main.jsx
-    ├── index.html
-    ├── package.json
-    └── vite.config.js
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx          # Root component, auth + data state
+│   │   ├── analytics.js     # All data processing logic
+│   │   ├── components/
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── Header.jsx
+│   │   │   ├── Dashboard.jsx    # Fleet overview, leaderboard, nudge alerts, Hall of Fame
+│   │   │   ├── ShoeCard.jsx     # Per-shoe summary card
+│   │   │   ├── ShoeDetail.jsx   # Full analytics + settings tab
+│   │   │   ├── Leaderboard.jsx  # Pace rankings and awards
+│   │   │   └── LoadingScreen.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── CHANGELOG.md
+└── LICENSE
 ```
