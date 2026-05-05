@@ -3,11 +3,12 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const axios = require('axios');
+const path = require('path');
 const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
@@ -256,9 +257,18 @@ app.get('/api/activities', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Serve frontend ──────────────────────────────────────────────────────────
+
+const distPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(distPath));
+
+// Catch-all: serve index.html for any non-API route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
 // ─── Start ───────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
-  console.log(`\n🥾 Shoe411 backend running on http://localhost:${PORT}`);
-  console.log(`   Auth URL: http://localhost:${PORT}/auth/strava\n`);
+  console.log(`\n🥾 Shoe411 running on http://localhost:${PORT}`);
 });

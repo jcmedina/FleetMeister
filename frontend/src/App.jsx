@@ -122,9 +122,9 @@ export default function App() {
 
       {error && (
         <div style={{
-          maxWidth: 1200, margin: '16px auto 0', padding: '0 32px',
+          maxWidth: 1200, margin: '16px auto 0',
           background: 'var(--signal-soft)', border: '1px solid var(--signal)',
-          color: 'var(--signal)', borderRadius: 6, padding: '12px 16px', fontSize: 13,
+          color: 'var(--signal)', borderRadius: 6, padding: '12px 32px', fontSize: 13,
         }}>{error}</div>
       )}
 

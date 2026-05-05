@@ -74,10 +74,9 @@ export default function ShoeDetail({ shoe, onSaveSettings }) {
 
       {/* Key stats grid */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(1px, 1fr)',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
         gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)',
         borderRadius: 4, overflow: 'hidden', marginBottom: 36,
-        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
       }}>
         {[
           { num: `${totalKm?.toFixed(1)} km`, label: 'Total Distance' },
