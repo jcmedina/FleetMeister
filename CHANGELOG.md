@@ -4,6 +4,18 @@ All notable changes to Shoe411 are documented here. Versions loosely follow [Sem
 
 ---
 
+## [1.6.0] — 2026-05-05
+
+### No more terminal
+
+The biggest quality-of-life improvement yet — you no longer need to keep a terminal window open to use Shoe411.
+
+- **Frontend served from Express** — the React app is now built once (`npm run build`) and served directly from the backend. No more running two separate processes.
+- **PM2 background service** — Shoe411 now runs as a proper background service using PM2. It starts automatically when your Mac boots and keeps running after you close the terminal. The app just lives at `http://localhost:3001` whenever your computer is on.
+- **Switched to `node:sqlite`** — dropped `better-sqlite3` (which had native compilation issues on Apple Silicon with Node.js v24) in favor of the built-in `node:sqlite` module. Zero installation, zero build steps, same functionality.
+
+---
+
 ## [1.5.0] — 2026-05-04
 
 ### Performance improvements
