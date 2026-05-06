@@ -4,7 +4,12 @@ const session = require('express-session');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
+const fs = require('fs');
 const db = require('./db');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,7 +22,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'shoe411-dev-secret',
@@ -146,7 +151,7 @@ app.get('/api/gear', requireAuth, async (req, res) => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const shoes = (response.data.shoes || []).map((shoe) => ({
+    const activeShoes = (response.data.shoes || []).map((shoe) => ({
       id: shoe.id,
       name: shoe.name,
       brand_name: shoe.brand_name,
@@ -157,6 +162,55 @@ app.get('/api/gear', requireAuth, async (req, res) => {
       retired: shoe.retired,
       primary: shoe.primary,
     }));
+
+    // Save every shoe we see so we can find retired ones later
+    const userId = req.session.athlete.id;
+    db.saveKnownGear(userId, activeShoes);
+
+    // Build the full set of gear IDs we know about:
+    // 1. Previously saved known_gear entries
+    // 2. Any gear_id found in cached activities (catches retired shoes immediately)
+    const activeIds = new Set(activeShoes.map((s) => s.id));
+    const knownGear = db.getKnownGearIds(userId);
+    const knownIds = new Set(knownGear.map((g) => g.gear_id));
+
+    const cachedActivities = req.session.cache?.activities || [];
+    for (const act of cachedActivities) {
+      if (act.gear_id) knownIds.add(act.gear_id);
+    }
+
+    const missingIds = [...knownIds]
+      .filter((id) => !activeIds.has(id))
+      .map((gear_id) => ({ gear_id }));
+
+    // Fetch each missing shoe individually — Strava returns them with retired: true
+    const retiredShoes = await Promise.all(
+      missingIds.map(async ({ gear_id }) => {
+        try {
+          const r = await axios.get(`https://www.strava.com/api/v3/gear/${gear_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          return {
+            id: r.data.id,
+            name: r.data.name,
+            brand_name: r.data.brand_name,
+            model_name: r.data.model_name,
+            description: r.data.description,
+            distance: r.data.distance,
+            converted_distance: r.data.converted_distance,
+            retired: true,
+            primary: false,
+          };
+        } catch {
+          return null; // skip if fetch fails
+        }
+      })
+    );
+
+    const shoes = [
+      ...activeShoes,
+      ...retiredShoes.filter(Boolean),
+    ];
 
     if (!req.session.cache) req.session.cache = {};
     req.session.cache.gear = shoes;
@@ -178,6 +232,45 @@ app.get('/api/settings', requireAuth, (req, res) => {
   } catch (err) {
     console.error('Settings fetch error:', err.message);
     res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Upload photo for a shoe
+app.post('/api/settings/:gear_id/photo', requireAuth, (req, res) => {
+  try {
+    const { gear_id } = req.params;
+    const { photo_data, mime_type } = req.body;
+    if (!photo_data) return res.status(400).json({ error: 'No photo data' });
+
+    const ext = mime_type?.includes('png') ? 'png' : 'jpg';
+    const filename = `${gear_id}.${ext}`;
+    const filepath = path.join(uploadsDir, filename);
+
+    // Strip data URL prefix and save as binary
+    const base64 = photo_data.replace(/^data:image\/\w+;base64,/, '');
+    fs.writeFileSync(filepath, Buffer.from(base64, 'base64'));
+
+    db.savePhoto(req.session.athlete.id, gear_id, filename);
+    res.json({ url: `/uploads/${filename}` });
+  } catch (err) {
+    console.error('Photo upload error:', err.message);
+    res.status(500).json({ error: 'Failed to save photo' });
+  }
+});
+
+// Delete photo for a shoe
+app.delete('/api/settings/:gear_id/photo', requireAuth, (req, res) => {
+  try {
+    const { gear_id } = req.params;
+    db.savePhoto(req.session.athlete.id, gear_id, null);
+    // Remove file if it exists
+    for (const ext of ['jpg', 'png']) {
+      const fp = path.join(uploadsDir, `${gear_id}.${ext}`);
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete photo' });
   }
 });
 
@@ -250,6 +343,11 @@ app.get('/api/activities', requireAuth, async (req, res) => {
     if (!req.session.cache) req.session.cache = {};
     req.session.cache.activities = allActivities;
 
+    // Persist all gear IDs seen in activities so retired shoes can be found later
+    const userId = req.session.athlete.id;
+    const gearIds = [...new Set(allActivities.map((a) => a.gear_id).filter(Boolean))];
+    db.saveKnownGear(userId, gearIds.map((id) => ({ id, name: null })));
+
     res.json(allActivities);
   } catch (err) {
     console.error('Activities fetch error:', err.response?.data || err.message);
@@ -257,7 +355,9 @@ app.get('/api/activities', requireAuth, async (req, res) => {
   }
 });
 
-// ─── Serve frontend ──────────────────────────────────────────────────────────
+// ─── Serve uploads & frontend ────────────────────────────────────────────────
+
+app.use('/uploads', express.static(uploadsDir));
 
 const distPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(distPath));

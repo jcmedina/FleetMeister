@@ -216,6 +216,7 @@ export function analyzeShoes(shoes, activities, settings = {}) {
       customLimitKm:  shoeSettings.custom_limit_km || null,
       nudgeDays:      shoeSettings.nudge_days      || null,
       retirementNote: shoeSettings.retirement_note || null,
+      photo:          shoeSettings.photo           || null,
       daysSinceLastRun,
       needsNudge,
     };

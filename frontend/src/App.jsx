@@ -76,6 +76,31 @@ export default function App() {
     }
   };
 
+  const savePhoto = async (gearId, photoData, mimeType) => {
+    const res = await fetch(`${API}/api/settings/${gearId}/photo`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo_data: photoData, mime_type: mimeType }),
+    });
+    if (!res.ok) throw new Error('Failed to upload photo');
+    const { url } = await res.json();
+    // Refresh settings so the photo URL propagates
+    const settingsRes = await fetch(`${API}/api/settings`, { credentials: 'include' });
+    const settings = settingsRes.ok ? await settingsRes.json() : {};
+    const { gear, activities } = rawCache.current;
+    const analyzed = analyzeShoes(gear, activities, settings);
+    analyzed.sort((a, b) => {
+      if (!a.lastRunDate) return 1;
+      if (!b.lastRunDate) return -1;
+      return new Date(b.lastRunDate) - new Date(a.lastRunDate);
+    });
+    setShoes(analyzed);
+    const updated = analyzed.find((s) => s.id === gearId);
+    if (updated) setSelectedShoe(updated);
+    return url;
+  };
+
   const saveSettings = async (gearId, fields) => {
     const res = await fetch(`${API}/api/settings/${gearId}`, {
       method: 'PUT',
@@ -132,7 +157,7 @@ export default function App() {
         <LoadingScreen message="Syncing your Strava data…" inline />
       ) : selectedShoe ? (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 32px 80px' }}>
-          <ShoeDetail shoe={selectedShoe} onBack={() => setSelectedShoe(null)} onSaveSettings={saveSettings} />
+          <ShoeDetail shoe={selectedShoe} onBack={() => setSelectedShoe(null)} onSaveSettings={saveSettings} onSavePhoto={savePhoto} />
         </div>
       ) : (
         <Dashboard shoes={shoes} onSelectShoe={setSelectedShoe} onRefresh={() => loadData(true)} />

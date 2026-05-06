@@ -174,7 +174,9 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
 
       {open && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-          {shoes.map((shoe) => (
+          {shoes.map((shoe) => {
+            const photoUrl = shoe.photo ? `/uploads/${shoe.photo}` : null;
+            return (
             <div
               key={shoe.id}
               onClick={() => onSelectShoe(shoe)}
@@ -182,72 +184,93 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
                 background: 'var(--paper)', border: '1px solid var(--rule)',
                 borderRadius: 8, padding: '20px 24px', cursor: 'pointer',
                 opacity: 0.75, transition: 'opacity 0.15s',
+                display: 'flex', gap: 16, alignItems: 'flex-start',
               }}
               onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
               onMouseLeave={(e) => e.currentTarget.style.opacity = '0.75'}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--serif)', fontSize: 17, fontWeight: 500, color: 'var(--ink)' }}>
-                    {shoe.name}
-                  </div>
-                  {(shoe.brand_name || shoe.model_name) && (
-                    <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>
-                      {[shoe.brand_name, shoe.model_name].filter(Boolean).join(' ')}
-                    </div>
-                  )}
-                </div>
-                <span style={{
-                  fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em',
-                  color: 'var(--ink-4)', border: '1px solid var(--rule)',
-                  padding: '3px 8px', borderRadius: 100, fontWeight: 600,
-                }}>Retired</span>
-              </div>
-
-              <div style={{ display: 'flex', gap: 24, marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'var(--ink-2)' }}>
-                    {shoe.totalKm?.toFixed(0)} km
-                  </div>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                    Career distance
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'var(--ink-2)' }}>
-                    {shoe.runCount}
-                  </div>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                    Runs
-                  </div>
-                </div>
-                {shoe.medianPaceLabel && (
-                  <div>
-                    <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'var(--ink-2)' }}>
-                      {shoe.medianPaceLabel}
-                    </div>
-                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                      Median pace
-                    </div>
-                  </div>
+              {/* Mini tombstone photo */}
+              <div style={{
+                width: 52, height: 60, flexShrink: 0,
+                borderRadius: '52px 52px 4px 4px',
+                border: '1.5px solid var(--ink-4)',
+                overflow: 'hidden',
+                background: photoUrl ? 'transparent' : 'var(--rule)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {photoUrl ? (
+                  <img src={photoUrl} alt={shoe.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <span style={{ fontSize: 18, opacity: 0.4 }}>👟</span>
                 )}
               </div>
 
-              {shoe.retirementNote && (
-                <p style={{
-                  fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--serif)',
-                  fontStyle: 'italic', borderTop: '1px solid var(--rule)', paddingTop: 12, margin: 0,
-                }}>
-                  "{shoe.retirementNote}"
-                </p>
-              )}
-              {shoe.firstRunDate && (
-                <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: shoe.retirementNote ? 8 : 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {shoe.firstRunDate} → {shoe.lastRunDate || '—'}
+              {/* Card content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {shoe.name}
+                    </div>
+                    {(shoe.brand_name || shoe.model_name) && (
+                      <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2 }}>
+                        {[shoe.brand_name, shoe.model_name].filter(Boolean).join(' ')}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em',
+                    color: 'var(--ink-4)', border: '1px solid var(--rule)',
+                    padding: '3px 8px', borderRadius: 100, fontWeight: 600, flexShrink: 0, marginLeft: 8,
+                  }}>Retired</span>
                 </div>
-              )}
+
+                <div style={{ display: 'flex', gap: 20, marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
+                      {shoe.totalKm?.toFixed(0)} km
+                    </div>
+                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
+                      Distance
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
+                      {shoe.runCount}
+                    </div>
+                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
+                      Runs
+                    </div>
+                  </div>
+                  {shoe.medianPaceLabel && (
+                    <div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
+                        {shoe.medianPaceLabel}
+                      </div>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
+                        Pace
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {shoe.retirementNote && (
+                  <p style={{
+                    fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--serif)',
+                    fontStyle: 'italic', borderTop: '1px solid var(--rule)', paddingTop: 10, margin: 0,
+                    overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                  }}>
+                    "{shoe.retirementNote}"
+                  </p>
+                )}
+                {shoe.firstRunDate && (
+                  <div style={{ fontSize: 10, color: 'var(--ink-4)', marginTop: shoe.retirementNote ? 6 : 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {shoe.firstRunDate} → {shoe.lastRunDate || '—'}
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

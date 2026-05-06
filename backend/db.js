@@ -14,7 +14,22 @@ db.exec(`
     custom_limit_km INTEGER,
     nudge_days      INTEGER,
     retirement_note TEXT,
+    photo           TEXT,
     updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (gear_id, user_id)
+  )
+`);
+
+// Add photo column if it doesn't exist yet (for existing databases)
+try { db.exec('ALTER TABLE shoe_settings ADD COLUMN photo TEXT'); } catch (_) {}
+
+// Tracks every shoe we've ever seen — so retired shoes (which vanish from
+// Strava's athlete endpoint) can still be fetched individually.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS known_gear (
+    gear_id  TEXT NOT NULL,
+    user_id  TEXT NOT NULL,
+    name     TEXT,
     PRIMARY KEY (gear_id, user_id)
   )
 `);
@@ -36,10 +51,27 @@ const upsertStmt = db.prepare(`
     updated_at      = excluded.updated_at
 `);
 
+const savePhotoStmt = db.prepare(`
+  INSERT INTO shoe_settings (gear_id, user_id, photo, updated_at)
+  VALUES (?, ?, ?, datetime('now'))
+  ON CONFLICT(gear_id, user_id) DO UPDATE SET
+    photo      = excluded.photo,
+    updated_at = excluded.updated_at
+`);
+
+const saveKnownGear = db.prepare(`
+  INSERT INTO known_gear (gear_id, user_id, name)
+  VALUES (?, ?, ?)
+  ON CONFLICT(gear_id, user_id) DO UPDATE SET name = excluded.name
+`);
+
+const getKnownGear = db.prepare(
+  `SELECT gear_id, name FROM known_gear WHERE user_id = ?`
+);
+
 module.exports = {
   getAllForUser: (userId) => {
     const rows = getAllForUser.all(String(userId));
-    // Return as a map keyed by gear_id for easy lookup
     return Object.fromEntries(rows.map((r) => [r.gear_id, r]));
   },
   upsert: (userId, gearId, fields) => {
@@ -51,5 +83,16 @@ module.exports = {
       fields.nudge_days      ?? null,
       fields.retirement_note ?? null,
     );
+  },
+  savePhoto: (userId, gearId, filename) => {
+    savePhotoStmt.run(gearId, String(userId), filename);
+  },
+  saveKnownGear: (userId, shoes) => {
+    for (const shoe of shoes) {
+      saveKnownGear.run(shoe.id, String(userId), shoe.name);
+    }
+  },
+  getKnownGearIds: (userId) => {
+    return getKnownGear.all(String(userId)); // [{ gear_id, name }]
   },
 };
