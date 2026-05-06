@@ -1,6 +1,5 @@
 node_modules/
 backend/.env
-node_modules/
-backend/.env
-node_modules/
-backend/.env
+backend/shoe411.db
+backend/uploads/
+frontend/dist/

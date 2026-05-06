@@ -15,6 +15,7 @@ A local web app that connects to your Strava account to track running shoe usage
 - **Shoe types** — tag each pair with what it's actually for (Daily Trainer, Race Day, Trail, etc.)
 - **Nudge alerts** — get reminded when a shoe hasn't been used in a while
 - **Hall of Fame** — retired shoes live on with their career stats and a space for a farewell note
+- **Memorial view** — each retired shoe gets a full tombstone-style page with a portrait photo, epitaph, b./d. dates, and a career stats ledger
 
 ---
 
@@ -128,8 +129,9 @@ After rebuilding the frontend, always run `pm2 restart shoe411` to pick up the c
 shoe411/
 ├── backend/
 │   ├── server.js        # Express server, Strava OAuth, API routes, session cache, static file serving
-│   ├── db.js            # SQLite (node:sqlite) — custom shoe settings
+│   ├── db.js            # SQLite (node:sqlite) — custom shoe settings and photo filenames
 │   ├── shoe411.db       # Local database (auto-created on first run)
+│   ├── uploads/         # Shoe portrait photos (auto-created, gitignored)
 │   ├── package.json
 │   └── .env.example
 ├── frontend/

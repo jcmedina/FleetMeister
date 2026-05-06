@@ -4,6 +4,21 @@ All notable changes to Shoe411 are documented here. Versions loosely follow [Sem
 
 ---
 
+## [1.7.0] — 2026-05-06
+
+### In Memoriam — retired shoe memorial view
+
+Every great pair deserves a proper send-off. Retired shoes now get a full memorial page instead of just a stats screen.
+
+- **Tombstone portrait** — a large arch-shaped frame sits at the top of the page. Click it to upload a photo of the shoe. It's their final portrait, so make it count.
+- **Centered memorial layout** — "in memoriam" eyebrow, the shoe's name in big italic type, your retirement note displayed as an epitaph, and birth/death dates (first run → last run).
+- **A life in numbers** — career stats ledger with months of service, total outings, pace, heart rate, and more.
+- **Hall of Fame thumbnails** — the Hall of Fame cards on the dashboard now show a mini tombstone photo if you've uploaded one, so you can recognize each retired pair at a glance.
+- **Photo upload infrastructure** — photos are stored locally in `backend/uploads/` and served at `/uploads/`. The SQLite database tracks which photo belongs to each shoe.
+- **Fixed photo upload crash** — Express's default JSON body limit (100 KB) was rejecting base64-encoded photos. Raised the limit to 10 MB so uploads actually go through.
+
+---
+
 ## [1.6.0] — 2026-05-05
 
 ### No more terminal
