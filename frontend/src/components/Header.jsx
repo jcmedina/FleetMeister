@@ -24,7 +24,7 @@ export default function Header({ athlete, onLogout, onBack, title }) {
             fontFamily: 'var(--serif)', fontWeight: 600, fontSize: 20,
             letterSpacing: '-0.02em', color: 'var(--ink)',
           }}>
-            Shoe<em style={{ fontStyle: 'italic', color: 'var(--brand)', fontWeight: 500 }}>411</em>
+            Fleet<em style={{ fontStyle: 'italic', color: 'var(--brand)', fontWeight: 500 }}>Meister</em>
           </span>
           {onBack && title && (
             <span style={{ color: 'var(--ink-3)', fontSize: 14 }}>/ {title}</span>

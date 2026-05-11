@@ -1,11 +1,8 @@
 import React from 'react';
 import ShoeCard from './ShoeCard';
-import Leaderboard from './Leaderboard';
-import { REPLACEMENT_KM } from '../analytics';
+import { LeaderboardBoards, LeaderboardAwards } from './Leaderboard';
 
 export default function Dashboard({ shoes, onSelectShoe, onRefresh }) {
-  const [hallOpen, setHallOpen] = React.useState(false);
-
   const activeShoes  = shoes.filter((s) => !s.retired);
   const retiredShoes = shoes.filter((s) => s.retired);
   const nudgeShoes   = activeShoes.filter((s) => s.needsNudge);
@@ -26,7 +23,7 @@ export default function Dashboard({ shoes, onSelectShoe, onRefresh }) {
           fontFamily: 'var(--serif)', fontSize: 44, fontWeight: 500,
           letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--ink)',
         }}>
-          Your <em style={{ fontStyle: 'italic', color: 'var(--brand)', fontWeight: 400 }}>fleet</em>.
+          It's a good day for a <em style={{ fontStyle: 'italic', color: 'var(--brand)', fontWeight: 400 }}>run</em>.
         </h1>
         <div style={{ display: 'flex', gap: 28, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <MarqueeStat num={activeShoes.length} label="Active pairs" />
@@ -35,15 +32,7 @@ export default function Dashboard({ shoes, onSelectShoe, onRefresh }) {
         </div>
       </div>
 
-      {/* Nudge alerts */}
-      {nudgeShoes.length > 0 && (
-        <NudgeSection shoes={nudgeShoes} onSelectShoe={onSelectShoe} />
-      )}
-
-      {/* Leaderboard */}
-      {activeShoes.length > 0 && <Leaderboard shoes={activeShoes} onSelectShoe={onSelectShoe} />}
-
-      {/* Your Shoes section */}
+      {/* ── 1. Your Shoes ──────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em' }}>
@@ -65,25 +54,39 @@ export default function Dashboard({ shoes, onSelectShoe, onRefresh }) {
         <button onClick={onRefresh} style={{
           border: '1px solid var(--rule)', background: 'transparent',
           padding: '7px 14px', borderRadius: 6, fontSize: 13,
-          color: 'var(--ink-2)', transition: 'all 0.15s',
+          color: 'var(--ink-2)', transition: 'all 0.15s', cursor: 'pointer',
         }}>↻ Refresh</button>
       </div>
 
       {activeShoes.length === 0 ? <EmptyState /> : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20, marginBottom: 64 }}>
           {activeShoes.map((shoe) => (
             <ShoeCard key={shoe.id} shoe={shoe} onClick={() => onSelectShoe(shoe)} />
           ))}
         </div>
       )}
 
-      {/* Hall of Fame */}
+      {/* ── 2. Hall of Fame ────────────────────────────────────────────────────── */}
       {retiredShoes.length > 0 && (
-        <HallOfFame shoes={retiredShoes} open={hallOpen} onToggle={() => setHallOpen((v) => !v)} onSelectShoe={onSelectShoe} />
+        <HallOfFame shoes={retiredShoes} onSelectShoe={onSelectShoe} />
       )}
+
+      {/* ── 3. Needs a Run ─────────────────────────────────────────────────────── */}
+      {nudgeShoes.length > 0 && (
+        <NudgeSection shoes={nudgeShoes} onSelectShoe={onSelectShoe} />
+      )}
+
+      {/* ── 4. Leaderboard ─────────────────────────────────────────────────────── */}
+      {activeShoes.length > 0 && <LeaderboardBoards shoes={activeShoes} onSelectShoe={onSelectShoe} />}
+
+      {/* ── 5. Awards ──────────────────────────────────────────────────────────── */}
+      {activeShoes.length > 0 && <LeaderboardAwards shoes={activeShoes} onSelectShoe={onSelectShoe} />}
+
     </div>
   );
 }
+
+// ─── Marquee stat ─────────────────────────────────────────────────────────────
 
 function MarqueeStat({ num, label }) {
   return (
@@ -94,70 +97,18 @@ function MarqueeStat({ num, label }) {
   );
 }
 
-function NudgeSection({ shoes, onSelectShoe }) {
-  return (
-    <div style={{
-      background: 'var(--amber-soft, #fffbf0)', border: '1px solid var(--amber)',
-      borderRadius: 8, padding: '20px 24px', marginBottom: 40,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 18 }}>👟</span>
-        <h3 style={{
-          fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 500,
-          color: 'var(--ink)', letterSpacing: '-0.01em',
-        }}>
-          Needs a <em style={{ fontStyle: 'italic', fontWeight: 400 }}>run</em>
-        </h3>
-        <span style={{
-          fontSize: 11, background: 'var(--amber)', color: '#fff',
-          borderRadius: 100, padding: '2px 8px', fontWeight: 700,
-          letterSpacing: '0.04em',
-        }}>{shoes.length}</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {shoes.map((shoe) => (
-          <div
-            key={shoe.id}
-            onClick={() => onSelectShoe(shoe)}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'var(--paper)', border: '1px solid var(--rule)',
-              borderRadius: 6, padding: '12px 16px', cursor: 'pointer',
-              transition: 'border-color 0.15s',
-            }}
-          >
-            <div>
-              <div style={{ fontFamily: 'var(--serif)', fontSize: 15, fontWeight: 500, color: 'var(--ink)' }}>
-                {shoe.name}
-              </div>
-              {(shoe.brand_name || shoe.model_name) && (
-                <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>
-                  {[shoe.brand_name, shoe.model_name].filter(Boolean).join(' ')}
-                </div>
-              )}
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 20, fontFamily: 'var(--serif)', fontWeight: 500, color: 'var(--amber)' }}>
-                {shoe.daysSinceLastRun}d
-              </div>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-4)' }}>
-                since last run
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ─── Hall of Fame ─────────────────────────────────────────────────────────────
 
-function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
+const HOF_PREVIEW = 3;
+
+function HallOfFame({ shoes, onSelectShoe }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const visible   = expanded ? shoes : shoes.slice(0, HOF_PREVIEW);
+  const moreCount = shoes.length - HOF_PREVIEW;
+
   return (
-    <div style={{ marginTop: 64, borderTop: '1px solid var(--rule)', paddingTop: 32 }}>
-      <div
-        onClick={onToggle}
-        style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', marginBottom: open ? 28 : 0 }}
-      >
+    <div style={{ marginBottom: 64, borderTop: '1px solid var(--rule)', paddingTop: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 24 }}>
         <h2 style={{
           fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 500,
           letterSpacing: '-0.02em', color: 'var(--ink-2)',
@@ -167,16 +118,12 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
         <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
           {shoes.length} retired pair{shoes.length !== 1 ? 's' : ''}
         </span>
-        <span style={{ marginLeft: 'auto', fontSize: 16, color: 'var(--ink-3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-          ▾
-        </span>
       </div>
 
-      {open && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-          {shoes.map((shoe) => {
-            const photoUrl = shoe.photo ? `/uploads/${shoe.photo}` : null;
-            return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+        {visible.map((shoe) => {
+          const photoUrl = shoe.photo ? `/uploads/${shoe.photo}` : null;
+          return (
             <div
               key={shoe.id}
               onClick={() => onSelectShoe(shoe)}
@@ -189,7 +136,7 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
               onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
               onMouseLeave={(e) => e.currentTarget.style.opacity = '0.75'}
             >
-              {/* Mini tombstone photo */}
+              {/* Mini tombstone */}
               <div style={{
                 width: 52, height: 60, flexShrink: 0,
                 borderRadius: '52px 52px 4px 4px',
@@ -198,14 +145,13 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
                 background: photoUrl ? 'transparent' : 'var(--rule)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                {photoUrl ? (
-                  <img src={photoUrl} alt={shoe.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                ) : (
-                  <span style={{ fontSize: 18, opacity: 0.4 }}>👟</span>
-                )}
+                {photoUrl
+                  ? <img src={photoUrl} alt={shoe.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  : <span style={{ fontSize: 18, opacity: 0.4 }}>👟</span>
+                }
               </div>
 
-              {/* Card content */}
+              {/* Content */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ minWidth: 0 }}>
@@ -226,32 +172,9 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
                 </div>
 
                 <div style={{ display: 'flex', gap: 20, marginBottom: 10 }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
-                      {shoe.totalKm?.toFixed(0)} km
-                    </div>
-                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                      Distance
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
-                      {shoe.runCount}
-                    </div>
-                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                      Runs
-                    </div>
-                  </div>
-                  {shoe.medianPaceLabel && (
-                    <div>
-                      <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>
-                        {shoe.medianPaceLabel}
-                      </div>
-                      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>
-                        Pace
-                      </div>
-                    </div>
-                  )}
+                  <StatMini num={`${shoe.totalKm?.toFixed(0)} km`} label="Distance" />
+                  <StatMini num={shoe.runCount} label="Runs" />
+                  {shoe.medianPaceLabel && <StatMini num={shoe.medianPaceLabel} label="Pace" />}
                 </div>
 
                 {shoe.retirementNote && (
@@ -270,12 +193,75 @@ function HallOfFame({ shoes, open, onToggle, onSelectShoe }) {
                 )}
               </div>
             </div>
-          )})}
-        </div>
+          );
+        })}
+      </div>
+
+      {moreCount > 0 && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            marginTop: 16, background: 'transparent', border: 'none',
+            padding: 0, cursor: 'pointer', fontSize: 13,
+            color: 'var(--ink-3)', fontFamily: 'inherit',
+          }}
+        >
+          {expanded ? '↑ Show less' : `+ ${moreCount} more`}
+        </button>
       )}
     </div>
   );
 }
+
+function StatMini({ num, label }) {
+  return (
+    <div>
+      <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink-2)' }}>{num}</div>
+      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-4)', fontWeight: 600 }}>{label}</div>
+    </div>
+  );
+}
+
+// ─── Needs a Run — minimalist ─────────────────────────────────────────────────
+
+function NudgeSection({ shoes, onSelectShoe }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+      padding: '12px 0', marginBottom: 56,
+      borderTop: '2px solid var(--amber)',
+    }}>
+      <span style={{
+        fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em',
+        color: 'var(--amber)', fontWeight: 700, flexShrink: 0,
+      }}>
+        Needs a run
+      </span>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {shoes.map((shoe) => (
+          <button
+            key={shoe.id}
+            onClick={() => onSelectShoe(shoe)}
+            style={{
+              background: 'transparent', border: '1px solid var(--rule)',
+              borderRadius: 100, padding: '4px 12px', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 12, color: 'var(--ink-2)', fontFamily: 'inherit',
+              transition: 'border-color 0.15s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--amber)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--rule)'}
+          >
+            <span style={{ fontFamily: 'var(--serif)', fontWeight: 500 }}>{shoe.name}</span>
+            <span style={{ color: 'var(--amber)', fontWeight: 600, fontSize: 11 }}>{shoe.daysSinceLastRun}d</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyState() {
   return (

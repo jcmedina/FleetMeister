@@ -1,6 +1,22 @@
 # Changelog
 
-All notable changes to Shoe411 are documented here. Versions loosely follow [Semantic Versioning](https://semver.org/).
+All notable changes to FleetMeister are documented here. Versions loosely follow [Semantic Versioning](https://semver.org/).
+
+---
+
+## [1.8.0] — 2026-05-11
+
+### FleetMeister — a new name and a cleaner dashboard
+
+The app has a new name. Shoe411 was always a working title; FleetMeister is what it actually is: a tool for managing your fleet, like a proper Meister would.
+
+- **Renamed to FleetMeister** — browser tab, nav logo, and all the things. Same app, better name.
+- **Your Shoes moves to the top** — the shoe cards are now the first thing you see after the header. That's why you're here.
+- **Hall of Fame previews first three entries** — the retired shoe section no longer hides behind a click. The first three pairs are visible right away, with a "+ N more" link to expand the rest.
+- **"Needs a Run" is now a single strip** — the amber warning block has been replaced with a slim inline row: just a label and a pill per overdue shoe. It was taking up too much real estate for what it was saying.
+- **Leaderboard and Awards are now separate sections** — they were always two different things. Now they look like it.
+- **Pace sparkline on every shoe card** — a tiny inline chart now sits next to the progress bar showing pace trend across the last 10 runs. More signal, less chrome.
+- **dotenv path fix** — the backend now always finds its `.env` file regardless of how PM2 starts the server. No more mysterious Strava "invalid client_id" errors after a restart.
 
 ---
 

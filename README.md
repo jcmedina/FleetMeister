@@ -1,4 +1,4 @@
-# Shoe411 — Know Your Kicks
+# FleetMeister — Know Your Kicks
 
 A local web app that connects to your Strava account to track running shoe usage, performance, and help you know when it's time for a new pair.
 
@@ -24,7 +24,7 @@ A local web app that connects to your Strava account to track running shoe usage
 ### 1. Create a Strava API app
 
 1. Go to [strava.com/settings/api](https://www.strava.com/settings/api)
-2. Create an application (name it anything, e.g. "Shoe411")
+2. Create an application (name it anything, e.g. "FleetMeister")
 3. Set **Authorization Callback Domain** to `localhost`
 4. Note your **Client ID** and **Client Secret**
 
@@ -85,7 +85,7 @@ If you don't want to keep a terminal window open, use PM2 to run Shoe411 as a ba
 sudo npm install -g pm2
 
 # Start Shoe411
-pm2 start ~/path/to/ShoeAnalyzer/backend/server.js --name shoe411 --cwd ~/path/to/ShoeAnalyzer/backend
+pm2 start ~/path/to/ShoeAnalyzer/backend/server.js --name fleetmeister --cwd ~/path/to/ShoeAnalyzer/backend
 
 # Auto-start on login — run the command pm2 startup prints, then:
 pm2 startup
@@ -97,18 +97,18 @@ Useful PM2 commands:
 | Task | Command |
 |------|---------|
 | Check status | `pm2 list` |
-| Restart | `pm2 restart shoe411` |
-| Stop | `pm2 stop shoe411` |
-| View logs | `pm2 logs shoe411` |
+| Restart | `pm2 restart fleetmeister` |
+| Stop | `pm2 stop fleetmeister` |
+| View logs | `pm2 logs fleetmeister` |
 
-After rebuilding the frontend, always run `pm2 restart shoe411` to pick up the changes.
+After rebuilding the frontend, always run `pm2 restart fleetmeister` to pick up the changes.
 
 ---
 
 ## How it works
 
 1. Click **Connect with Strava** — you'll be redirected to Strava to authorize read-only access
-2. Shoe411 fetches all your registered shoes and every run that has a shoe assigned
+2. FleetMeister fetches all your registered shoes and every run that has a shoe assigned
 3. Analytics are computed entirely in-browser — no data is sent anywhere except Strava's API
 4. Custom settings (shoe type, mileage limits, nudge days, retirement notes) are stored in a local SQLite database
 5. Sessions persist for 7 days; click **Sign out** to clear your session

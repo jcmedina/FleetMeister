@@ -4,7 +4,7 @@ import { REPLACEMENT_KM, shoeTypeLabel } from '../analytics';
 const TICKS = 20;
 
 export default function ShoeCard({ shoe, onClick }) {
-  const { replacement } = shoe;
+  const { replacement, paceTrend, paceImprovement } = shoe;
   const limitKm = shoe.customLimitKm || REPLACEMENT_KM;
   const ratio = Math.min((shoe.totalKm || 0) / limitKm, 1);
   const filled = Math.round(ratio * TICKS);
@@ -32,7 +32,7 @@ export default function ShoeCard({ shoe, onClick }) {
         e.currentTarget.style.transform = 'none';
       }}
     >
-      {/* Replace flag */}
+      {/* Replace now flag (danger only — keeps the critical alert) */}
       {replacement?.level === 'danger' && (
         <div style={{
           position: 'absolute', top: 22, right: 22,
@@ -66,40 +66,80 @@ export default function ShoeCard({ shoe, onClick }) {
         <Stat num={shoe.medianPaceLabel || '—'} label="Avg pace" small />
       </div>
 
-      {/* Progress */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-        <span style={{
-          fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 14, fontWeight: 500,
-          color: tickColor,
-        }}>
-          {replacement?.label}
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+      {/* km counter — label removed, color on ticks encodes status */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+        <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>
           <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{shoe.totalKm?.toFixed(0)}</strong> / {limitKm} km
         </span>
+        {paceImprovement !== null && paceImprovement !== undefined && (
+          <span style={{
+            fontSize: 10, letterSpacing: '0.04em',
+            color: paceImprovement > 0 ? 'var(--moss)' : 'var(--ink-4)',
+          }}>
+            {paceImprovement > 0 ? '▼ faster' : '▲ slower'}
+          </span>
+        )}
       </div>
 
-      {/* Tick bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 3, marginBottom: 14 }}>
-        {Array.from({ length: TICKS }, (_, i) => (
-          <div key={i} style={{
-            height: 6, borderRadius: 1,
-            background: i < filled ? tickColor : 'var(--rule)',
-          }} />
-        ))}
+      {/* Tick bar + sparkline on same row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 3, flex: 1 }}>
+          {Array.from({ length: TICKS }, (_, i) => (
+            <div key={i} style={{
+              height: 6, borderRadius: 1,
+              background: i < filled ? tickColor : 'var(--rule)',
+            }} />
+          ))}
+        </div>
+        <Sparkline data={paceTrend} color={tickColor} />
       </div>
 
-      {/* Tags */}
+      {/* Tags — nudge tag removed (page-level banner handles it) */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {shoe.shoeType && <Tag label={shoeTypeLabel(shoe.shoeType) || shoe.shoeType} accent />}
-        {shoe.needsNudge && (
-          <Tag label={`${shoe.daysSinceLastRun}d idle`} warn />
-        )}
         {shoe.lastRunDate && <Tag label={`Last run · ${formatDate(shoe.lastRunDate)}`} plain />}
       </div>
     </div>
   );
 }
+
+// ─── Sparkline ────────────────────────────────────────────────────────────────
+
+function Sparkline({ data, color }) {
+  const paces = (data || []).slice(-10).map((p) => p.pace).filter(Boolean);
+  if (paces.length < 3) return null;
+
+  const W = 52, H = 18;
+  const min = Math.min(...paces);
+  const max = Math.max(...paces);
+  const range = max - min || 1;
+
+  const points = paces.map((v, i) => {
+    const x = ((i / (paces.length - 1)) * W).toFixed(1);
+    const y = (((v - min) / range) * H).toFixed(1); // higher y = slower (same axis convention as detail chart)
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg
+      width={W} height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ flexShrink: 0, display: 'block' }}
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+    </svg>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Stat({ num, label, small }) {
   return (

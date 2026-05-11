@@ -1,8 +1,9 @@
 import React from 'react';
 import { Zap, HeartPulse, Mountain, Medal, Sparkles } from 'lucide-react';
-import { formatPace } from '../analytics';
 
-export default function Leaderboard({ shoes, onSelectShoe }) {
+// ─── LeaderboardBoards ────────────────────────────────────────────────────────
+
+export function LeaderboardBoards({ shoes, onSelectShoe }) {
   const active = shoes.filter((s) => !s.retired && s.runCount >= 3);
 
   const top5Fastest = [...active]
@@ -14,6 +15,50 @@ export default function Leaderboard({ shoes, onSelectShoe }) {
     .filter((s) => s.avgHeartRate)
     .sort((a, b) => a.avgHeartRate - b.avgHeartRate)
     .slice(0, 5);
+
+  if (!top5Fastest.length && !top5Relaxing.length) return null;
+
+  return (
+    <div style={{ marginBottom: 48 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }}>
+        <h2 style={{ fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em' }}>
+          The <em style={{ fontStyle: 'italic', fontWeight: 400 }}>leaderboard</em>
+        </h2>
+        <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>By the numbers</span>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: top5Fastest.length && top5Relaxing.length ? '1fr 1fr' : '1fr',
+        gap: 32,
+      }}>
+        {top5Fastest.length > 0 && (
+          <Board
+            icon={<Zap size={16} />}
+            title="Fastest Shoes"
+            sub="Median pace · lower is faster"
+            rows={top5Fastest.map((s, i) => ({ rank: i + 1, name: s.name, stat: s.medianPaceLabel, shoe: s }))}
+            onSelect={onSelectShoe}
+          />
+        )}
+        {top5Relaxing.length > 0 && (
+          <Board
+            icon={<HeartPulse size={16} />}
+            title="Most Relaxing"
+            sub="Avg heart rate · lower is calmer"
+            rows={top5Relaxing.map((s, i) => ({ rank: i + 1, name: s.name, stat: `${s.avgHeartRate} bpm`, shoe: s }))}
+            onSelect={onSelectShoe}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── LeaderboardAwards ────────────────────────────────────────────────────────
+
+export function LeaderboardAwards({ shoes, onSelectShoe }) {
+  const active = shoes.filter((s) => !s.retired && s.runCount >= 3);
 
   const bestLongRun = [...active]
     .filter((s) => s.avgLongRunPace && s.longRunCount >= 2)
@@ -29,72 +74,35 @@ export default function Leaderboard({ shoes, onSelectShoe }) {
   const awards = [
     bestLongRun && { icon: Mountain, label: 'Long Run King', title: bestLongRun.name, sub: 'Best avg pace, runs > 10 km', stat: bestLongRun.avgLongRunPaceLabel, shoe: bestLongRun },
     bestSpeed   && { icon: Zap,      label: 'Speed Demon',   title: bestSpeed.name,   sub: 'Best avg pace, runs < 22 km', stat: bestSpeed.avgSpeedRunPaceLabel,   shoe: bestSpeed },
-    mostUsed    && { icon: Medal,     label: 'Most Reliable', title: mostUsed.name,   sub: 'Your most-used shoe',         stat: `${mostUsed.runCount} runs`,       shoe: mostUsed },
-    freshest    && { icon: Sparkles,  label: 'Freshest Legs', title: freshest.name,   sub: 'Fewest km logged',            stat: `${freshest.totalKm} km`,          shoe: freshest },
+    mostUsed    && { icon: Medal,     label: 'Most Reliable', title: mostUsed.name,    sub: 'Your most-used shoe',         stat: `${mostUsed.runCount} runs`,        shoe: mostUsed },
+    freshest    && { icon: Sparkles,  label: 'Freshest Legs', title: freshest.name,    sub: 'Fewest km logged',            stat: `${freshest.totalKm} km`,           shoe: freshest },
   ].filter(Boolean);
 
-  if (!top5Fastest.length && !top5Relaxing.length && !awards.length) return null;
+  if (!awards.length) return null;
 
   return (
     <div style={{ marginBottom: 56 }}>
-      {/* Leaderboard header */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{ fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em' }}>
-          The <em style={{ fontStyle: 'italic', fontWeight: 400 }}>leaderboard</em>
+          <em style={{ fontStyle: 'italic', fontWeight: 400 }}>Awards</em>
         </h2>
-        <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>By the numbers</span>
+        <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Standing distinctions</span>
       </div>
-
-      {/* Two ranking boards */}
-      {(top5Fastest.length > 0 || top5Relaxing.length > 0) && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: top5Fastest.length && top5Relaxing.length ? '1fr 1fr' : '1fr',
-          gap: 32, marginBottom: 40,
-        }}>
-          {top5Fastest.length > 0 && (
-            <Board
-              icon={<Zap size={16} />}
-              title="Fastest Shoes"
-              sub="Median pace · lower is faster"
-              rows={top5Fastest.map((s, i) => ({ rank: i + 1, name: s.name, stat: s.medianPaceLabel, shoe: s }))}
-              onSelect={onSelectShoe}
-            />
-          )}
-          {top5Relaxing.length > 0 && (
-            <Board
-              icon={<HeartPulse size={16} />}
-              title="Most Relaxing"
-              sub="Avg heart rate · lower is calmer"
-              rows={top5Relaxing.map((s, i) => ({ rank: i + 1, name: s.name, stat: `${s.avgHeartRate} bpm`, shoe: s }))}
-              onSelect={onSelectShoe}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Awards */}
-      {awards.length > 0 && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Awards</h3>
-            <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Standing distinctions</span>
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(awards.length, 4)}, 1fr)`,
-            gap: '1px', background: 'var(--rule)',
-            border: '1px solid var(--rule)', borderRadius: 4, overflow: 'hidden',
-          }}>
-            {awards.map((a) => (
-              <AwardCell key={a.label} award={a} onSelect={onSelectShoe} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.min(awards.length, 4)}, 1fr)`,
+        gap: '1px', background: 'var(--rule)',
+        border: '1px solid var(--rule)', borderRadius: 4, overflow: 'hidden',
+      }}>
+        {awards.map((a) => (
+          <AwardCell key={a.label} award={a} onSelect={onSelectShoe} />
+        ))}
+      </div>
     </div>
   );
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Board({ icon, title, sub, rows, onSelect }) {
   return (
@@ -108,7 +116,7 @@ function Board({ icon, title, sub, rows, onSelect }) {
         </div>
         <span style={{ fontSize: 11, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{sub}</span>
       </div>
-      <ol style={{ listStyle: 'none' }}>
+      <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         {rows.map((row, i) => (
           <li
             key={i}
@@ -118,7 +126,6 @@ function Board({ icon, title, sub, rows, onSelect }) {
               alignItems: 'center', padding: '11px 0',
               borderBottom: i < rows.length - 1 ? '1px solid var(--rule-2)' : 'none',
               gap: 12, cursor: 'pointer',
-              transition: 'background 0.1s',
             }}
           >
             <span style={{
@@ -173,5 +180,16 @@ function AwardCell({ award, onSelect }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Default export (combined, kept for compatibility) ─────────────────────────
+
+export default function Leaderboard({ shoes, onSelectShoe }) {
+  return (
+    <>
+      <LeaderboardBoards shoes={shoes} onSelectShoe={onSelectShoe} />
+      <LeaderboardAwards shoes={shoes} onSelectShoe={onSelectShoe} />
+    </>
   );
 }
