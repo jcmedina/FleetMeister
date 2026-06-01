@@ -11,90 +11,106 @@ export default function ShoeCard({ shoe, onClick }) {
   const tickColor = replacement?.level === 'danger' ? 'var(--signal)'
     : replacement?.level === 'warning' || replacement?.level === 'caution' ? 'var(--amber)'
     : 'var(--moss)';
+  const isDanger = replacement?.level === 'danger';
+
+  const baseShadow = isDanger
+    ? '5px 5px 0 var(--signal), 0 0 0 3px var(--signal)'
+    : '5px 5px 0 var(--ink), 0 0 0 3px var(--ink)';
+  const hoverShadow = isDanger
+    ? '8px 8px 0 var(--signal), 0 0 0 3px var(--signal)'
+    : '8px 8px 0 var(--ink), 0 0 0 3px var(--ink)';
 
   return (
     <div
       onClick={onClick}
       style={{
         background: 'var(--card)',
-        borderRadius: 'var(--radius)',
         padding: '22px',
-        boxShadow: replacement?.level === 'danger'
-          ? `0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--signal)`
-          : 'var(--shadow)',
-        transition: 'all 0.2s',
+        boxShadow: baseShadow,
+        transition: 'transform 0.08s, box-shadow 0.08s',
         cursor: 'pointer',
         position: 'relative',
       }}
-      onMouseOver={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.boxShadow = replacement?.level === 'danger' ? `0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--signal)` : 'var(--shadow)';
-        e.currentTarget.style.transform = 'none';
-      }}
+      onMouseOver={(e) => { e.currentTarget.style.boxShadow = hoverShadow; e.currentTarget.style.transform = 'translate(-2px,-2px)'; }}
+      onMouseOut={(e)  => { e.currentTarget.style.boxShadow = baseShadow;  e.currentTarget.style.transform = 'none'; }}
     >
-      {/* Replace now flag (danger only — keeps the critical alert) */}
-      {replacement?.level === 'danger' && (
+      {/* Replace now flag (danger only) */}
+      {isDanger && (
         <div style={{
-          position: 'absolute', top: 22, right: 22,
-          fontFamily: 'var(--serif)', fontStyle: 'italic',
-          fontSize: 12, color: 'var(--signal)', fontWeight: 500,
+          position: 'absolute', top: -13, right: 16,
+          background: 'var(--signal)', color: '#fff',
+          border: '2px solid var(--ink)',
+          padding: '2px 10px',
+          fontSize: 11, fontWeight: 800,
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+          boxShadow: '3px 3px 0 var(--ink)',
+          transform: 'rotate(2deg)',
         }}>Replace now</div>
       )}
 
       {/* Name */}
-      <div style={{ marginBottom: 18, paddingRight: replacement?.level === 'danger' ? 90 : 0 }}>
+      <div style={{ marginBottom: 18 }}>
         <div style={{
-          fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 600,
-          letterSpacing: '-0.01em', color: 'var(--ink)', lineHeight: 1.25,
+          fontFamily: 'var(--sans)', fontSize: 19, fontWeight: 800,
+          letterSpacing: '-0.01em', color: 'var(--ink)', lineHeight: 1.2,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {shoe.name || 'Unnamed Shoe'}
         </div>
+        {shoe.shoeType && (
+          <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 600, marginTop: 2 }}>
+            {shoeTypeLabel(shoe.shoeType) || shoe.shoeType}
+          </div>
+        )}
         {shoe.retired && (
-          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Retired</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Retired</span>
         )}
       </div>
 
       {/* Stats */}
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-        gap: 14, marginBottom: 18, paddingBottom: 18,
-        borderBottom: '1px solid var(--rule-2)',
+        margin: '18px 0',
+        border: '2px solid var(--ink)',
       }}>
         <Stat num={shoe.totalKm?.toFixed(0) || '0'} label="Kilometres" />
-        <Stat num={shoe.runCount || '0'} label="Runs" />
-        <Stat num={shoe.medianPaceLabel || '—'} label="Avg pace" small />
+        <Stat num={shoe.runCount || '0'} label="Runs" divider />
+        <Stat num={shoe.medianPaceLabel || '—'} label="Avg pace" small divider />
       </div>
 
-      {/* km counter — label removed, color on ticks encodes status */}
+      {/* km counter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-          <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{shoe.totalKm?.toFixed(0)}</strong> / {limitKm} km
+        <span style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 600 }}>
+          <strong style={{ fontFamily: 'var(--mono)', color: 'var(--ink)', fontWeight: 800 }}>{shoe.totalKm?.toFixed(0)}</strong>
+          <span style={{ margin: '0 4px', color: 'var(--ink-4)' }}>/</span>
+          <span style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{limitKm} km</span>
         </span>
         {paceImprovement !== null && paceImprovement !== undefined && (
           <span style={{
-            fontSize: 10, letterSpacing: '0.04em',
-            color: paceImprovement > 0 ? 'var(--moss)' : 'var(--ink-4)',
+            fontSize: 10, letterSpacing: '0.04em', fontWeight: 800,
+            color: paceImprovement > 0 ? 'var(--moss)' : 'var(--ink-3)',
+            textTransform: 'uppercase',
           }}>
             {paceImprovement > 0 ? '▼ faster' : '▲ slower'}
           </span>
         )}
       </div>
 
-      {/* Tick bar + sparkline on same row */}
+      {/* Tick bar + sparkline */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 3, flex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TICKS}, 1fr)`, gap: 2, flex: 1 }}>
           {Array.from({ length: TICKS }, (_, i) => (
             <div key={i} style={{
-              height: 6, borderRadius: 1,
-              background: i < filled ? tickColor : 'var(--rule)',
+              height: 14,
+              border: '1.5px solid var(--ink)',
+              background: i < filled ? tickColor : 'var(--card)',
             }} />
           ))}
         </div>
         <Sparkline data={paceTrend} color={tickColor} />
       </div>
 
-      {/* Tags — nudge tag removed (page-level banner handles it) */}
+      {/* Tags */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {shoe.shoeType && <Tag label={shoeTypeLabel(shoe.shoeType) || shoe.shoeType} accent />}
         {shoe.lastRunDate && <Tag label={`Last run · ${formatDate(shoe.lastRunDate)}`} plain />}
@@ -109,31 +125,26 @@ function Sparkline({ data, color }) {
   const paces = (data || []).slice(-10).map((p) => p.pace).filter(Boolean);
   if (paces.length < 3) return null;
 
-  const W = 52, H = 18;
+  const W = 56, H = 18;
   const min = Math.min(...paces);
   const max = Math.max(...paces);
   const range = max - min || 1;
 
   const points = paces.map((v, i) => {
     const x = ((i / (paces.length - 1)) * W).toFixed(1);
-    const y = (((v - min) / range) * H).toFixed(1); // higher y = slower (same axis convention as detail chart)
+    const y = (((v - min) / range) * H).toFixed(1);
     return `${x},${y}`;
   }).join(' ');
 
   return (
-    <svg
-      width={W} height={H}
-      viewBox={`0 0 ${W} ${H}`}
-      style={{ flexShrink: 0, display: 'block' }}
-    >
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ flexShrink: 0, display: 'block' }}>
       <polyline
         points={points}
         fill="none"
         stroke={color}
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"
-        opacity="0.8"
       />
     </svg>
   );
@@ -141,35 +152,30 @@ function Sparkline({ data, color }) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Stat({ num, label, small }) {
+function Stat({ num, label, small, divider }) {
   return (
-    <div>
+    <div style={{
+      padding: '11px 12px',
+      borderLeft: divider ? '2px solid var(--ink)' : 'none',
+    }}>
       <span style={{
-        fontFamily: 'var(--serif)', fontSize: small ? 18 : 26,
-        fontWeight: 500, letterSpacing: '-0.02em', color: 'var(--ink)',
+        fontFamily: 'var(--mono)', fontSize: small ? 18 : 22,
+        fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--ink)',
         lineHeight: 1, display: 'block', marginBottom: 6,
       }}>{num}</span>
-      <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', fontWeight: 800 }}>{label}</span>
     </div>
   );
 }
 
-function Tag({ label, plain, accent, warn }) {
-  const bg = warn ? 'var(--amber-soft)'
-    : accent ? 'var(--brand-soft)'
-    : plain ? 'transparent'
-    : 'var(--paper-2)';
-  const color = warn ? 'var(--amber)'
-    : accent ? 'var(--brand)'
-    : 'var(--ink-3)';
-  const border = warn ? '1px solid var(--amber)'
-    : accent ? '1px solid var(--brand)'
-    : '1px solid var(--rule)';
+function Tag({ label, plain, accent }) {
   return (
     <span style={{
-      fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em',
-      padding: '4px 9px', borderRadius: 3, fontWeight: 600,
-      border, color, background: bg,
+      fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em',
+      padding: '4px 9px', fontWeight: 800,
+      border: '1.5px solid var(--ink)',
+      color: 'var(--ink)',
+      background: accent ? 'var(--brand)' : plain ? 'var(--paper)' : 'var(--card)',
     }}>{label}</span>
   );
 }

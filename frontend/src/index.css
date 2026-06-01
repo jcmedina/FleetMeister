@@ -1,32 +1,49 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --paper:       #faf7f2;
-  --paper-2:     #f4efe6;
-  --card:        #ffffff;
-  --ink:         #1a1614;
-  --ink-2:       #3d3633;
-  --ink-3:       #6b625d;
-  --ink-4:       #a8a098;
-  --rule:        #e8e1d4;
-  --rule-2:      #efeae0;
+  /* neobrutalism tokens — kept under original variable names where possible
+     so existing component inline styles pick them up automatically. */
 
-  --brand:       #d94a1f;
-  --brand-soft:  #fdf1ec;
-  --signal:      #c8392a;
-  --signal-soft: #fbecea;
-  --moss:        #5a7a3f;
-  --moss-soft:   #eef2e6;
-  --amber:       #b88a2c;
-  --amber-soft:  #f7efde;
+  --paper:        #fbfbf9;
+  --paper-2:      #f1f0ec;
+  --card:         #ffffff;
 
-  --serif: 'Fraunces', Georgia, serif;
-  --sans:  'Inter', system-ui, sans-serif;
+  --ink:          #1c293c;
+  --ink-2:        #2c3a4f;
+  --ink-3:        #5b6677;
+  --ink-4:        #8b94a3;
 
-  --radius: 8px;
-  --radius-sm: 5px;
-  --shadow: 0 1px 0 rgba(0,0,0,0.02), 0 0 0 1px var(--rule);
-  --shadow-hover: 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px var(--ink-4);
+  --rule:         #d4d6dc;   /* soft inner divider */
+  --rule-2:       #e6e8ed;   /* even softer divider */
+
+  --brand:        #fdc800;   /* signal yellow — primary accent */
+  --brand-soft:   #fff4bf;
+  --secondary:    #432dd7;   /* electric blue — links / lead-stat color */
+  --secondary-soft:#ebe6ff;
+
+  --signal:       #dc2626;   /* danger red */
+  --signal-soft:  #fceaea;
+  --moss:         #16a34a;   /* success green */
+  --moss-soft:    #dff1e3;
+  --amber:        #d97706;   /* warning amber */
+  --amber-soft:   #fff4e0;
+
+  /* All "serif" usage is now Inter — display weight (800/900) does the heavy lifting. */
+  --serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, monospace;
+
+  /* Brutalism = sharp corners. Keep variables in case anything still references them. */
+  --radius: 0px;
+  --radius-sm: 0px;
+
+  /* The hard offset shadow + a spread-shadow that doubles as a border. Stack works. */
+  --shadow:        5px 5px 0 var(--ink), 0 0 0 3px var(--ink);
+  --shadow-hover:  8px 8px 0 var(--ink), 0 0 0 3px var(--ink);
+
+  /* Explicit borders for components that compose their own shadow. */
+  --border:        3px solid var(--ink);
+  --border-thin:   2px solid var(--ink);
 }
 
 html, body {
@@ -39,13 +56,15 @@ html, body {
   min-height: 100vh;
 }
 
-/* Paper grain */
+/* Faint engineering grid — the neobrutalist staple. Replaces the paper-grain dots. */
 body::before {
   content: "";
   position: fixed; inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.018) 1px, transparent 0);
-  background-size: 3px 3px;
+  background-image:
+    linear-gradient(rgba(28,41,60,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28,41,60,0.045) 1px, transparent 1px);
+  background-size: 26px 26px;
   z-index: 0;
 }
 
@@ -54,6 +73,6 @@ body::before {
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; font-family: var(--sans); }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--paper-2); }
-::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--paper-2); border-left: 1px solid var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 0; }

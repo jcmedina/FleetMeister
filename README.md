@@ -19,7 +19,21 @@ A local web app that connects to your Strava account to track running shoe usage
 
 ---
 
-## Setup
+## Quick install (Mac)
+
+```bash
+git clone https://github.com/your-username/ShoeAnalyzer.git
+cd ShoeAnalyzer
+bash install.sh
+```
+
+The script will check your Node version, install PM2, build the frontend, prompt you for your Strava credentials, and start the background service. Then open [http://localhost:3001](http://localhost:3001).
+
+The only manual step is creating a Strava API app — see step 1 below.
+
+---
+
+## Manual setup
 
 ### 1. Create a Strava API app
 
@@ -81,16 +95,24 @@ Then open [http://localhost:3001](http://localhost:3001) in your browser.
 If you don't want to keep a terminal window open, use PM2 to run Shoe411 as a background service that starts automatically when your Mac boots.
 
 ```bash
-# Install PM2
+# Install PM2 (sudo required — it installs to /usr/local/lib)
 sudo npm install -g pm2
 
-# Start Shoe411
-pm2 start ~/path/to/ShoeAnalyzer/backend/server.js --name fleetmeister --cwd ~/path/to/ShoeAnalyzer/backend
+# Kill any existing PM2 daemon first (avoids stale binary issues after Node upgrades)
+pm2 kill
 
-# Auto-start on login — run the command pm2 startup prints, then:
+# Start FleetMeister — use the full node path to avoid PATH issues at boot
+pm2 start ~/path/to/ShoeAnalyzer/backend/server.js \
+  --name fleetmeister \
+  --interpreter $(which node) \
+  --cwd ~/path/to/ShoeAnalyzer/backend
+
+# Save the process list, then run the sudo command pm2 prints to enable auto-start
 pm2 startup
 pm2 save
 ```
+
+> **Note:** If PM2 shows `errored` after a macOS reboot, it's usually because Node was upgraded (e.g. by Homebrew) and PM2's native modules are stale. Fix: `sudo npm install -g pm2 && pm2 kill`, then re-run the start command above.
 
 Useful PM2 commands:
 

@@ -4,17 +4,20 @@ export default function LoadingScreen({ message = 'Loading…', inline = false }
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', gap: 16,
+      justifyContent: 'center', gap: 18,
       ...(inline ? { padding: '80px 20px' } : { minHeight: '100vh' }),
     }}>
       <div style={{
-        width: 36, height: 36,
-        border: '2px solid var(--rule)',
+        width: 44, height: 44,
+        border: '3px solid var(--ink)',
         borderTopColor: 'var(--brand)',
-        borderRadius: '50%',
         animation: 'spin 0.8s linear infinite',
+        boxShadow: '3px 3px 0 var(--ink)',
       }} />
-      <p style={{ color: 'var(--ink-3)', fontSize: 14, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>{message}</p>
+      <p style={{
+        color: 'var(--ink)', fontSize: 13, fontFamily: 'var(--sans)', fontWeight: 800,
+        textTransform: 'uppercase', letterSpacing: '0.12em',
+      }}>{message}</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

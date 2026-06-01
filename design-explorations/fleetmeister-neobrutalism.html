@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetMeister — Neobrutalism exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* neobrutalism tokens */
+    --primary:    #FDC800;   /* signal yellow */
+    --secondary:  #432DD7;   /* electric blue */
+    --success:    #16A34A;
+    --warning:    #D97706;
+    --danger:     #DC2626;
+    --surface:    #FBFBF9;
+    --card:       #FFFFFF;
+    --ink:        #1C293C;
+    --ink-3:      #5b6677;
+
+    --border: 3px solid var(--ink);
+    --border-thin: 2px solid var(--ink);
+    --shadow:   5px 5px 0 var(--ink);
+    --shadow-sm:3px 3px 0 var(--ink);
+    --shadow-lg:8px 8px 0 var(--ink);
+
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    /* faint engineering grid — a neobrutalist staple */
+    background-image:
+      linear-gradient(rgba(28,41,60,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28,41,60,0.045) 1px, transparent 1px);
+    background-size: 26px 26px;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  button{ cursor:pointer; font-family:var(--sans); }
+
+  .mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  .wrap{ max-width:1200px; margin:0 auto; padding:0 32px; }
+
+  /* ── Header ───────────────────────────────────────── */
+  header{
+    border-bottom: var(--border);
+    background: var(--surface);
+    position:sticky; top:0; z-index:100;
+  }
+  .header-row{
+    height:68px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo{
+    font-weight:900; font-size:22px; letter-spacing:-0.02em;
+  }
+  .athlete{ display:flex; align-items:center; gap:12px; }
+  .avatar{
+    width:34px; height:34px; border:var(--border-thin);
+    background:linear-gradient(135deg,var(--primary),var(--warning));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px;
+  }
+  .btn{
+    border:var(--border-thin); background:var(--card);
+    padding:8px 14px; font-size:13px; font-weight:700;
+    box-shadow:var(--shadow-sm); transition:transform .08s, box-shadow .08s;
+  }
+  .btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  .btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+  .btn-y{ background:var(--primary); }
+
+  /* ── Marquee ──────────────────────────────────────── */
+  .marquee{
+    display:flex; align-items:flex-end; gap:28px; flex-wrap:wrap;
+    padding:44px 0 32px; margin-bottom:44px;
+    border-bottom: var(--border);
+  }
+  .marquee h1{
+    font-weight:900; font-size:52px; line-height:.95; letter-spacing:-0.04em;
+    max-width:620px;
+  }
+  .marquee h1 .run{
+    background:var(--primary); border:var(--border); box-shadow:var(--shadow-sm);
+    padding:0 12px; display:inline-block; transform:rotate(-1.5deg); margin-top:8px;
+  }
+  .marquee-stats{ display:flex; gap:0; margin-left:auto; }
+  .mstat{
+    border:var(--border-thin); border-right-width:0; background:var(--card);
+    padding:14px 22px; min-width:104px;
+  }
+  .mstat:last-child{ border-right-width:3px; box-shadow:var(--shadow-sm); }
+  .mstat .num{ font-family:var(--mono); font-weight:800; font-size:30px; line-height:1; letter-spacing:-0.03em; }
+  .mstat .lbl{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-3); margin-top:6px; }
+
+  /* ── Section heads ────────────────────────────────── */
+  .sec-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+  .sec-head h2{ font-weight:900; font-size:30px; letter-spacing:-0.03em; display:flex; align-items:center; gap:12px; }
+  .sec-head h2 .em{ background:var(--ink); color:var(--surface); padding:0 8px; }
+  .pill{
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+    border:var(--border-thin); padding:5px 10px; background:var(--card);
+  }
+  .pill.alarm{ background:var(--danger); color:#fff; border-color:var(--ink); }
+  .pill.muted{ color:var(--ink-3); }
+
+  /* ── Shoe cards ───────────────────────────────────── */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:24px; margin-bottom:64px; }
+  .card{
+    background:var(--card); border:var(--border); box-shadow:var(--shadow);
+    padding:22px; position:relative; transition:transform .08s, box-shadow .08s;
+  }
+  .card:hover{ transform:translate(-2px,-2px); box-shadow:var(--shadow-lg); }
+  .card.danger{ box-shadow:5px 5px 0 var(--danger); border-color:var(--danger); }
+  .card.danger:hover{ box-shadow:8px 8px 0 var(--danger); }
+  .replace-flag{
+    position:absolute; top:-13px; right:16px; background:var(--danger); color:#fff;
+    border:var(--border-thin); border-color:var(--ink); padding:2px 10px;
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    box-shadow:var(--shadow-sm); transform:rotate(2deg);
+  }
+  .card .name{ font-weight:800; font-size:19px; letter-spacing:-0.01em; line-height:1.2; }
+  .card .sub{ font-size:12px; color:var(--ink-3); font-weight:600; margin-top:2px; }
+
+  .stat-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; margin:18px 0;
+    border:var(--border-thin);
+  }
+  .stat-row .cell{ padding:11px 12px; border-right:var(--border-thin); }
+  .stat-row .cell:last-child{ border-right:0; }
+  .stat-row .num{ font-family:var(--mono); font-weight:800; font-size:22px; line-height:1; letter-spacing:-0.02em; display:block; }
+  .stat-row .num.sm{ font-size:16px; }
+  .stat-row .lbl{ font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); margin-top:6px; display:block; }
+
+  .km-line{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; font-size:12px; font-weight:600; }
+  .km-line b{ font-family:var(--mono); font-weight:800; }
+  .trend{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+  .trend.up{ color:var(--success); }
+  .trend.down{ color:var(--ink-3); }
+
+  .ticks-row{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .ticks{ display:grid; grid-template-columns:repeat(20,1fr); gap:2px; flex:1; }
+  .tick{ height:14px; border:1.5px solid var(--ink); }
+  .tick.on-good{ background:var(--success); }
+  .tick.on-warn{ background:var(--warning); }
+  .tick.on-dang{ background:var(--danger); }
+  .tick.off{ background:var(--card); }
+
+  .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tag{
+    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    padding:4px 9px; border:1.5px solid var(--ink);
+  }
+  .tag.accent{ background:var(--primary); }
+  .tag.plain{ background:var(--surface); color:var(--ink-3); }
+
+  /* ── Hall of Fame ─────────────────────────────────── */
+  .hof{ margin-bottom:64px; border-top:var(--border); padding-top:36px; }
+  .hof-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:24px; }
+  .hof-card{
+    background:#f1f0ec; border:var(--border); box-shadow:var(--shadow-sm);
+    padding:20px; display:flex; gap:16px; align-items:flex-start;
+  }
+  .tomb{
+    width:58px; height:68px; flex-shrink:0; border:var(--border-thin);
+    border-radius:58px 58px 0 0; background:var(--ink); color:var(--primary);
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+  }
+  .hof-card .name{ font-weight:800; font-size:16px; }
+  .hof-card .sub{ font-size:11px; color:var(--ink-3); font-weight:600; margin-top:2px; }
+  .hof-stats{ display:flex; gap:18px; margin:10px 0; }
+  .hof-stats .num{ font-family:var(--mono); font-weight:800; font-size:18px; }
+  .hof-stats .lbl{ font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); }
+  .epitaph{ font-size:12px; font-style:italic; border-top:var(--border-thin); padding-top:8px; color:var(--ink); }
+  .dates{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-top:6px; }
+
+  /* ── Needs a run ──────────────────────────────────── */
+  .needs{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    border:var(--border); border-left-width:10px; border-left-color:var(--warning);
+    background:#fff7ec; padding:16px 20px; margin-bottom:56px; box-shadow:var(--shadow-sm);
+  }
+  .needs .eyebrow{ font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; color:var(--warning); }
+  .needs-chip{
+    border:var(--border-thin); background:var(--card); padding:5px 12px;
+    display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px;
+  }
+  .needs-chip .d{ font-family:var(--mono); font-weight:800; color:var(--warning); }
+
+  /* ── Leaderboard ──────────────────────────────────── */
+  .lb{ margin-bottom:56px; }
+  .lb-grid{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+  .board{ border:var(--border); background:var(--card); box-shadow:var(--shadow); }
+  .board-head{
+    background:var(--ink); color:var(--surface); padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .board-head .t{ font-weight:800; font-size:17px; display:flex; align-items:center; gap:8px; }
+  .board-head .s{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#c9cdd6; }
+  .row{
+    display:grid; grid-template-columns:34px 1fr auto; align-items:center;
+    gap:12px; padding:13px 18px; border-bottom:var(--border-thin);
+  }
+  .row:last-child{ border-bottom:0; }
+  .row .rk{ font-family:var(--mono); font-weight:800; font-size:18px; text-align:center; }
+  .row.lead .rk{ background:var(--primary); border:1.5px solid var(--ink); }
+  .row .nm{ font-weight:600; }
+  .row .st{ font-family:var(--mono); font-weight:800; font-size:16px; }
+  .row.lead .st{ color:var(--secondary); }
+
+  /* ── Awards ───────────────────────────────────────── */
+  .awards-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; border:var(--border); box-shadow:var(--shadow); }
+  .award{ background:var(--card); padding:22px 18px; border-right:var(--border-thin); }
+  .award:nth-child(4){ border-right:0; }
+  .award:nth-child(2){ background:#f6f4ff; }
+  .award:nth-child(3){ background:#fffbe8; }
+  .award .ic{ width:40px; height:40px; border:var(--border-thin); display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--surface); margin-bottom:14px; }
+  .award .lbl{ font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); }
+  .award .nm{ font-weight:800; font-size:17px; margin-top:4px; line-height:1.15; }
+  .award .sb{ font-size:11px; color:var(--ink-3); margin-top:3px; font-weight:600; }
+  .award .big{ font-family:var(--mono); font-weight:800; font-size:26px; color:var(--secondary); letter-spacing:-0.02em; margin-top:12px; }
+
+  .footer-note{
+    border-top:var(--border); margin-top:24px; padding:20px 0 60px;
+    font-size:12px; color:var(--ink-3); font-weight:600; display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  .footer-note .badge{ background:var(--secondary); color:#fff; border:1.5px solid var(--ink); padding:2px 8px; font-weight:800; font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+
+  @media (max-width:760px){
+    .marquee h1{ font-size:38px; }
+    .lb-grid{ grid-template-columns:1fr; }
+    .awards-grid{ grid-template-columns:1fr 1fr; }
+    .award:nth-child(2){ border-right:0; }
+    .award:nth-child(1),.award:nth-child(2){ border-bottom:var(--border-thin); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header>
+  <div class="wrap header-row">
+    <span class="logo">FleetMeister</span>
+    <div class="athlete">
+      <div class="avatar">JM</div>
+      <span style="font-weight:700;font-size:13px;">JC Medina</span>
+      <button class="btn">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-bottom:0;">
+
+  <!-- ── Marquee ──────────────────────────────────────── -->
+  <section class="marquee">
+    <h1>It's a good day<br>for a <span class="run">run</span>.</h1>
+    <div class="marquee-stats">
+      <div class="mstat"><div class="num">6</div><div class="lbl">Active pairs</div></div>
+      <div class="mstat"><div class="num">2,589</div><div class="lbl">Total km</div></div>
+      <div class="mstat"><div class="num">379</div><div class="lbl">Total runs</div></div>
+    </div>
+  </section>
+
+  <!-- ── Your Shoes ───────────────────────────────────── -->
+  <div class="sec-head">
+    <h2>Your <span class="em">shoes</span></h2>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span class="pill alarm">⚠ 1 needs replacement</span>
+      <button class="btn btn-y">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ASICS — caution -->
+    <div class="card">
+      <div class="name">ASICS Novablast 4</div>
+      <div class="sub">Daily Trainer</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">428</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">81</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">5:38</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>428</b> / 650 km</span><span class="trend up">▼ faster</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="13" data-state="warn"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,14 8,12 16,13 24,9 32,10 40,6 52,7" fill="none" stroke="#D97706" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Daily Trainer</span><span class="tag plain">Last run · May 23</span></div>
+    </div>
+
+    <!-- Nike — danger -->
+    <div class="card danger">
+      <div class="replace-flag">Replace now</div>
+      <div class="name">Nike Pegasus 41</div>
+      <div class="sub">Daily Trainer</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">612</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">102</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">5:51</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>612</b> / 650 km</span><span class="trend down">▲ slower</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="19" data-state="dang"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,6 8,7 16,9 24,8 32,11 40,12 52,14" fill="none" stroke="#DC2626" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Daily Trainer</span><span class="tag plain">Last run · May 24</span></div>
+    </div>
+
+    <!-- Mizuno — good / race -->
+    <div class="card">
+      <div class="name">Mizuno Wave Rebellion Pro 2</div>
+      <div class="sub">Race Day</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">156</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">14</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">4:29</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>156</b> / 500 km</span><span class="trend up">▼ faster</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="6" data-state="good"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,12 8,10 16,11 24,7 32,8 40,4 52,3" fill="none" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Race Day</span><span class="tag plain">Last run · May 18</span></div>
+    </div>
+
+    <!-- Adidas — good / tempo -->
+    <div class="card">
+      <div class="name">Adidas Adizero Boston 12</div>
+      <div class="sub">Speed / Tempo</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">389</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">47</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">4:52</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>389</b> / 650 km</span><span class="trend up">▼ faster</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="12" data-state="good"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,11 8,9 16,10 24,8 32,6 40,7 52,5" fill="none" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Speed / Tempo</span><span class="tag plain">Last run · May 22</span></div>
+    </div>
+
+    <!-- Xtep — good / long -->
+    <div class="card">
+      <div class="name">Xtep 160X 5.0 Pro</div>
+      <div class="sub">Long Run</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">274</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">28</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">5:12</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>274</b> / 700 km</span><span class="trend up">▼ faster</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="8" data-state="good"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,10 8,11 16,9 24,10 32,7 40,8 52,6" fill="none" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Long Run</span><span class="tag plain">Last run · May 13</span></div>
+    </div>
+
+    <!-- Saucony Triumph — freshest -->
+    <div class="card">
+      <div class="name">Saucony Triumph 22</div>
+      <div class="sub">Recovery</div>
+      <div class="stat-row">
+        <div class="cell"><span class="num">88</span><span class="lbl">Kilometres</span></div>
+        <div class="cell"><span class="num">11</span><span class="lbl">Runs</span></div>
+        <div class="cell"><span class="num sm">6:08</span><span class="lbl">Avg pace</span></div>
+      </div>
+      <div class="km-line"><span><b>88</b> / 650 km</span><span class="trend down">▲ slower</span></div>
+      <div class="ticks-row">
+        <div class="ticks" data-filled="3" data-state="good"></div>
+        <svg width="52" height="18" viewBox="0 0 52 18"><polyline points="0,8 8,9 16,7 24,10 32,9 40,11 52,10" fill="none" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tags"><span class="tag accent">Recovery</span><span class="tag plain">Last run · May 16</span></div>
+    </div>
+
+  </div>
+
+  <!-- ── Hall of Fame ─────────────────────────────────── -->
+  <section class="hof">
+    <div class="sec-head" style="margin-bottom:24px;">
+      <h2>Hall of <span class="em">Fame</span></h2>
+      <span class="pill muted">1 retired pair</span>
+    </div>
+    <div class="hof-grid">
+      <div class="hof-card">
+        <div class="tomb">👟</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div>
+              <div class="name">Saucony Endorphin Pro 4</div>
+              <div class="sub">Race Day</div>
+            </div>
+            <span class="tag plain">Retired</span>
+          </div>
+          <div class="hof-stats">
+            <div><div class="num">642 km</div><div class="lbl">Distance</div></div>
+            <div><div class="num">96</div><div class="lbl">Runs</div></div>
+            <div><div class="num">4:41</div><div class="lbl">Pace</div></div>
+          </div>
+          <p class="epitaph">"Took me to a marathon PB. Every kilometre earned."</p>
+          <div class="dates">Jan 2024 → Mar 2026</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Needs a run ──────────────────────────────────── -->
+  <section class="needs">
+    <span class="eyebrow">Needs a run</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <span class="needs-chip">Xtep 160X 5.0 Pro <span class="d">12d</span></span>
+      <span class="needs-chip">Saucony Triumph 22 <span class="d">9d</span></span>
+    </div>
+  </section>
+
+  <!-- ── Leaderboard ──────────────────────────────────── -->
+  <section class="lb">
+    <div class="sec-head">
+      <h2>The <span class="em">leaderboard</span></h2>
+      <span class="pill muted">By the numbers</span>
+    </div>
+    <div class="lb-grid">
+      <div class="board">
+        <div class="board-head"><span class="t">⚡ Fastest Shoes</span><span class="s">Median pace · lower is faster</span></div>
+        <div class="row lead"><span class="rk">1</span><span class="nm">Mizuno Wave Rebellion Pro 2</span><span class="st">4:29</span></div>
+        <div class="row"><span class="rk">2</span><span class="nm">Adidas Adizero Boston 12</span><span class="st">4:52</span></div>
+        <div class="row"><span class="rk">3</span><span class="nm">Xtep 160X 5.0 Pro</span><span class="st">5:12</span></div>
+        <div class="row"><span class="rk">4</span><span class="nm">ASICS Novablast 4</span><span class="st">5:38</span></div>
+        <div class="row"><span class="rk">5</span><span class="nm">Nike Pegasus 41</span><span class="st">5:51</span></div>
+      </div>
+      <div class="board">
+        <div class="board-head"><span class="t">❤ Most Relaxing</span><span class="s">Avg heart rate · lower is calmer</span></div>
+        <div class="row lead"><span class="rk">1</span><span class="nm">Saucony Triumph 22</span><span class="st">138 bpm</span></div>
+        <div class="row"><span class="rk">2</span><span class="nm">Xtep 160X 5.0 Pro</span><span class="st">142 bpm</span></div>
+        <div class="row"><span class="rk">3</span><span class="nm">ASICS Novablast 4</span><span class="st">148 bpm</span></div>
+        <div class="row"><span class="rk">4</span><span class="nm">Adidas Adizero Boston 12</span><span class="st">155 bpm</span></div>
+        <div class="row"><span class="rk">5</span><span class="nm">Mizuno Wave Rebellion Pro 2</span><span class="st">162 bpm</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Awards ───────────────────────────────────────── -->
+  <section style="margin-bottom:8px;">
+    <div class="sec-head">
+      <h2><span class="em">Awards</span></h2>
+      <span class="pill muted">Standing distinctions</span>
+    </div>
+    <div class="awards-grid">
+      <div class="award">
+        <div class="ic">⛰</div>
+        <div class="lbl">Long Run King</div>
+        <div class="nm">Xtep 160X 5.0 Pro</div>
+        <div class="sb">Best avg pace, runs &gt; 10 km</div>
+        <div class="big">5:08</div>
+      </div>
+      <div class="award">
+        <div class="ic">⚡</div>
+        <div class="lbl">Speed Demon</div>
+        <div class="nm">Mizuno Wave Rebellion Pro 2</div>
+        <div class="sb">Best avg pace, runs &lt; 22 km</div>
+        <div class="big">4:29</div>
+      </div>
+      <div class="award">
+        <div class="ic">🏅</div>
+        <div class="lbl">Most Reliable</div>
+        <div class="nm">Nike Pegasus 41</div>
+        <div class="sb">Your most-used shoe</div>
+        <div class="big">102</div>
+      </div>
+      <div class="award">
+        <div class="ic">✦</div>
+        <div class="lbl">Freshest Legs</div>
+        <div class="nm">Saucony Triumph 22</div>
+        <div class="sb">Fewest km logged</div>
+        <div class="big">88</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <span class="badge">Design exploration</span>
+    Neobrutalism take on FleetMeister — static mockup, sample data. Not connected to Strava.
+  </div>
+
+</main>
+
+<script>
+  // Render tick bars (20 ticks each, faithful to the real ShoeCard)
+  document.querySelectorAll('.ticks').forEach(function(el){
+    var filled = parseInt(el.dataset.filled, 10);
+    var state = el.dataset.state; // good | warn | dang
+    for (var i = 0; i < 20; i++){
+      var t = document.createElement('div');
+      t.className = 'tick ' + (i < filled ? 'on-' + state : 'off');
+      el.appendChild(t);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -4,6 +4,22 @@ All notable changes to FleetMeister are documented here. Versions loosely follow
 
 ---
 
+## [1.9.0] — 2026-06-01
+
+### Neobrutalist redesign — bold borders, hard shadows, signal yellow
+
+The whole app got a new look. The warm-paper-and-Fraunces identity served us well, but FleetMeister felt like it wanted something with more personality and more punch. So we took the design system somewhere completely different.
+
+- **New visual language across every screen** — thick black borders (3px), hard offset shadows (5px 5px 0), no gradients, no rounded corners. Cards push into the page instead of floating above it.
+- **New palette** — warm paper background swapped for a slightly cooler off-white. Burnt orange is out; signal yellow (#FDC800) is in as the primary accent. Electric blue (#432DD7) handles lead stats and chart lines. Reds, greens, and ambers stay for danger / good / warning semantics.
+- **Inter + JetBrains Mono replace Fraunces** — display copy uses Inter at 800/900 weight; every number on the page is now in JetBrains Mono so stats line up cleanly and read like a dashboard.
+- **Tick bars now show their borders** — each of the 20 mileage cells has a thin black outline, so they read as a grid of cells rather than soft segments. Same colour rules — green / amber / red.
+- **Cards press in on hover** — instead of lifting, cards now offset further (5→8px shadow) and slide back up to the corner on click. It's tactile in a way the old soft-shadow version wasn't.
+- **Memorial view leans into it** — the tombstone is a 300px arch in bold outline with a chunky dirt mound and a dashed ground line underneath. The shoe name is uppercase Inter Black, the epitaph is bracketed by ink bars, and dates live in a small mono plaque. Same emotional beat, more weight.
+- **Engineering-grid background** — replaces the old paper-grain dots. Subtle enough to read like graph paper, not loud enough to compete with content.
+
+---
+
 ## [1.8.0] — 2026-05-11
 
 ### FleetMeister — a new name and a cleaner dashboard

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shoe411 — Green / Tufte Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design tokens ────────────────────────────────────────────────────── */
+    :root {
+      --bg:          #f8faf9;
+      --card:        #ffffff;
+      --brand:       #16a34a;
+      --brand-mid:   #15803d;
+      --brand-soft:  #f0fdf4;
+      --brand-line:  #bbf7d0;
+
+      --ink:         #0d0d0d;
+      --ink-2:       #262626;
+      --ink-3:       #5a5a5a;
+      --ink-4:       #a8a8a8;
+      --ink-5:       #d4d4d4;
+
+      --rule:        #e4e4e4;   /* light rule — Tufte: make rules as light as possible */
+      --rule-2:      #f0f0f0;
+
+      --moss:        #16a34a;
+      --amber:       #b45309;
+      --signal:      #b91c1c;
+
+      --font: 'Raleway', -apple-system, sans-serif;
+
+      /* Tufte: no shadows. Borders only where they encode structure. */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────────────── */
+    /* Tufte: header is navigation infrastructure, not data. Keep it minimal. */
+    .header {
+      background: #0d0d0d;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-wordmark {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .header-wordmark em {
+      font-style: normal;
+      color: var(--brand);
+    }
+    .header-athlete {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #777;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .header-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: var(--brand);
+      letter-spacing: 0.04em;
+    }
+    /* Tufte: remove the decorative "Strava ✓" badge. The info is in the athlete name. */
+    .header-strava {
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── Main ─────────────────────────────────────────────────────────────── */
+    .main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 40px 80px;
+    }
+
+    /* ─── Marquee ──────────────────────────────────────────────────────────── */
+    /* Tufte: the headline and summary stats together form one data statement.
+       Remove decorative separators. The border-bottom is functional: it marks
+       the transition from navigation/context to data. */
+    .marquee {
+      display: flex;
+      align-items: baseline;
+      gap: 32px;
+      padding: 44px 0 36px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 52px;
+      flex-wrap: wrap;
+    }
+    .marquee-headline {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .marquee-headline em {
+      font-style: normal;
+      color: var(--brand);
+    }
+    .marquee-stats {
+      display: flex;
+      gap: 40px;
+      margin-left: auto;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+    .mstat-num {
+      display: block;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .mstat-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-4);
+      font-weight: 600;
+    }
+
+    /* ─── Section head ─────────────────────────────────────────────────────── */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .section-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .section-title em { font-style: normal; color: var(--brand); }
+    .section-meta {
+      font-size: 12px;
+      color: var(--ink-4);
+      font-weight: 500;
+      margin-top: 4px;
+      display: flex; gap: 14px; align-items: center;
+    }
+    /* Tufte: status text in monochrome — use type weight/case, not color,
+       for the warning. Color reserved for data-level encoding in the tick bars. */
+    .status-warn {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--signal);
+    }
+
+    .btn-refresh {
+      border: 1px solid var(--rule);
+      background: transparent;
+      padding: 6px 13px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--ink-4);
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-refresh:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* ─── Nudge notice ──────────────────────────────────────────────────────
+       Tufte: use the minimum ink to convey urgency. A subtle left-rule in
+       amber does the work without a coloured background box.              */
+    .nudge-notice {
+      border-left: 3px solid var(--amber);
+      padding: 10px 0 10px 16px;
+      margin-bottom: 44px;
+      font-size: 13px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .nudge-notice strong { color: var(--ink-2); font-weight: 700; }
+
+    /* ─── Shoe grid ─────────────────────────────────────────────────────────
+       Tufte: small multiples. Every card has the exact same layout.
+       The grid IS the design. No shadows, no elevation games.             */
+    .shoe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1px;                        /* gap renders as the rule between cards */
+      background: var(--rule);         /* rule colour bleeds through the gap */
+      border: 1px solid var(--rule);
+      margin-bottom: 64px;
+    }
+
+    /* ─── Shoe card ─────────────────────────────────────────────────────────
+       Tufte: cards are small multiples — identical structure, data varies.
+       No box shadow, no border-radius personality, no hover transform.
+       The 1px grid gap is the only separator needed.                      */
+    .shoe-card {
+      background: var(--card);
+      padding: 22px 22px 20px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .shoe-card:hover { background: var(--brand-soft); }
+
+    .card-status-line {
+      /* Tufte: direct label the status. One line of type above the name. */
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+    .card-status-line.good    { color: var(--moss); }
+    .card-status-line.caution { color: var(--amber); }
+    .card-status-line.danger  { color: var(--signal); }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.2;
+      margin-bottom: 20px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Stats — Tufte: the numbers ARE the design */
+    .card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--rule-2);
+    }
+    .stat-num {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-num.sm { font-size: 17px; }
+    .stat-label {
+      display: block;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-4);
+      font-weight: 700;
+    }
+
+    /* Tick bar + km label row */
+    .card-km-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: var(--ink-4);
+      font-weight: 500;
+    }
+    .card-km-row strong { color: var(--ink-2); font-weight: 700; }
+
+    /* Tufte sparklines + tick bars: pure data-ink. Keep. */
+    .tick-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tick-bar {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 2px;
+      flex: 1;
+    }
+    .tick {
+      height: 5px;
+      border-radius: 0;           /* Tufte: remove rounded corners from data marks */
+    }
+    .tick.g { background: var(--moss); }
+    .tick.a { background: var(--amber); }
+    .tick.r { background: var(--signal); }
+    .tick.e { background: var(--rule); }
+
+    /* Tags — Tufte: only show tags that carry new information not already in
+       the card. Shoe type is new. Last-run date is new.
+       Remove border-radius decoration → flat pills.
+       Remove background fills → use outline only.                          */
+    .card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 7px;
+      font-weight: 700;
+      border-radius: 2px;         /* minimal, not decorative */
+    }
+    .tag.type  { border: 1px solid var(--brand-line); color: var(--brand-mid); }
+    .tag.date  { border: 1px solid var(--rule); color: var(--ink-4); }
+    .tag.idle  { border: 1px solid var(--amber); color: var(--amber); }
+
+    /* Trend indicator — inline with km label */
+    .trend { font-size: 10px; font-weight: 600; }
+    .trend.up   { color: var(--moss); }
+    .trend.down { color: var(--ink-4); }
+
+    /* ─── Hall of Fame ──────────────────────────────────────────────────────
+       Tufte: the section divider should cost as little ink as possible.
+       Two rules flanking a label — functional, not decorative.            */
+    .hof-section { margin-bottom: 60px; }
+    .hof-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .hof-rule { flex: 1; height: 1px; background: var(--rule); }
+    .hof-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+      color: var(--ink-4);
+      flex-shrink: 0;
+    }
+
+    /* Hall of Fame rows — Tufte: table-like. Every row identical.
+       Tombstone shape retained (it's a meaningful metaphor, not decoration). */
+    .hof-table { border-top: 1px solid var(--rule); }
+    .hof-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--rule-2);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .hof-row:hover { background: var(--brand-soft); margin: 0 -4px; padding: 14px 4px; }
+    .hof-tombstone {
+      width: 36px; height: 44px;
+      border-radius: 36px 36px 3px 3px;
+      background: var(--rule-2);
+      border: 1px solid var(--rule);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .hof-name { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink-2); }
+    .hof-dates { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+    .hof-km {
+      margin-left: auto;
+      text-align: right;
+    }
+    .hof-km-num { font-size: 20px; font-weight: 700; letter-spacing: -0.04em; color: var(--ink); }
+    .hof-km-unit { font-size: 11px; color: var(--ink-4); font-weight: 400; margin-left: 2px; }
+    .hof-runs { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+
+    /* ─── Leaderboard ───────────────────────────────────────────────────────
+       Tufte: a leaderboard is a ranked table. Use a table, not cards.
+       Remove ALL decorative elements. Let rank order and data values speak.  */
+    .lb-section { margin-bottom: 64px; }
+    .lb-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 680px) { .lb-grid { grid-template-columns: 1fr; } }
+
+    .lb-board {}
+    .lb-board-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+      color: var(--ink-4);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+    }
+    /* Tufte: table rows with range-frame style — only top/bottom rules, not full grid */
+    .lb-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--rule-2);
+      cursor: pointer;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover .lb-shoe { color: var(--brand); }
+    .lb-pos {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-4);
+      width: 14px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .lb-pos.p1 { color: var(--ink-2); }
+    .lb-shoe {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+      letter-spacing: -0.01em;
+      transition: color 0.12s;
+    }
+    .lb-val {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .lb-unit { font-size: 10px; color: var(--ink-4); font-weight: 400; margin-left: 2px; }
+
+    /* Awards — Tufte: remove icon decoration. The award title carries meaning.
+       Lay out as a clean 4-column table of text.                             */
+    .awards-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+      color: var(--ink-4);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .awards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--rule);
+      border-left: 1px solid var(--rule);
+    }
+    @media (max-width: 680px) { .awards-grid { grid-template-columns: 1fr 1fr; } }
+    .award-cell {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .award-cell:hover { background: var(--brand-soft); }
+    .award-cat {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      font-weight: 700; color: var(--ink-4); margin-bottom: 6px;
+    }
+    .award-name {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--ink); line-height: 1.2; margin-bottom: 4px;
+    }
+    .award-stat {
+      font-size: 11px; color: var(--ink-4); font-weight: 500;
+    }
+
+    /* ─── Footer ───────────────────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--ink-5);
+      padding-top: 20px;
+      border-top: 1px solid var(--rule-2);
+      font-weight: 600;
+    }
+    .footer strong { color: var(--brand); font-weight: 800; }
+
+    /* ─── Mockup flag ───────────────────────────────────────────────────────
+       Tufte: even this meta-label should be minimal. */
+    .flag {
+      position: fixed; bottom: 16px; right: 16px;
+      background: #0d0d0d; color: #555;
+      font-family: var(--font); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 11px; border-radius: 3px;
+      z-index: 999;
+    }
+    .flag em { font-style: normal; color: var(--brand); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <span class="header-wordmark">Shoe<em>411</em></span>
+    <div class="header-athlete">
+      <div class="header-avatar">JC</div>
+      <span>JC Medina</span>
+      <span class="header-strava">· via Strava</span>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- Marquee -->
+    <div class="marquee">
+      <h1 class="marquee-headline">It's a good day for a <em>run</em>.</h1>
+      <div class="marquee-stats">
+        <div><span class="mstat-num">4</span><span class="mstat-label">Active pairs</span></div>
+        <div><span class="mstat-num">2,847</span><span class="mstat-label">Total km</span></div>
+        <div><span class="mstat-num">312</span><span class="mstat-label">Total runs</span></div>
+      </div>
+    </div>
+
+    <!-- Nudge notice (Tufte: left-rule, not full banner) -->
+    <div class="nudge-notice">
+      <strong>Puma Velocity Nitro 2</strong> hasn't been out in 18 days — time for a spin?
+    </div>
+
+    <!-- Section: Your shoes -->
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">Your <em>shoes</em></h2>
+        <div class="section-meta">
+          <span>4 active pairs via Strava</span>
+          <span class="status-warn">1 needs replacement</span>
+        </div>
+      </div>
+      <button class="btn-refresh">↻ Refresh</button>
+    </div>
+
+    <!-- Shoe grid (small multiples) -->
+    <div class="shoe-grid">
+
+      <!-- Card 1: Healthy -->
+      <div class="shoe-card">
+        <div class="card-status-line good">Good · 60%</div>
+        <div class="card-name">Nike Pegasus 41</div>
+        <div class="card-stats">
+          <div><span class="stat-num">387</span><span class="stat-label">Kilometres</span></div>
+          <div><span class="stat-num">52</span><span class="stat-label">Runs</span></div>
+          <div><span class="stat-num sm">5:12</span><span class="stat-label">Avg pace</span></div>
+        </div>
+        <div class="card-km-row">
+          <span><strong>387</strong> / 650 km</span>
+          <span class="trend up">▼ getting faster</span>
+        </div>
+        <div class="tick-row">
+          <div class="tick-bar">
+            <div class="tick g"></div><div class="tick g"></div><div class="tick g"></div><div class="tick g"></div>
+            <div class="tick g"></div><div class="tick g"></div><div class="tick g"></div><div class="tick g"></div>
+            <div class="tick g"></div><div class="tick g"></div><div class="tick g"></div><div class="tick g"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+          </div>
+          <svg width="50" height="16" viewBox="0 0 50 16" style="flex-shrink:0">
+            <polyline points="0,13 8,10 17,11 26,7 34,8 43,4 50,3"
+              fill="none" stroke="#16a34a" stroke-width="1.5"
+              stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="card-tags">
+          <span class="tag type">Daily Trainer</span>
+          <span class="tag date">Last run May 10</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Caution -->
+      <div class="shoe-card">
+        <div class="card-status-line caution">Caution · 80%</div>
+        <div class="card-name">ASICS Gel-Kayano 31</div>
+        <div class="card-stats">
+          <div><span class="stat-num">521</span><span class="stat-label">Kilometres</span></div>
+          <div><span class="stat-num">68</span><span class="stat-label">Runs</span></div>
+          <div><span class="stat-num sm">5:31</span><span class="stat-label">Avg pace</span></div>
+        </div>
+        <div class="card-km-row">
+          <span><strong>521</strong> / 650 km</span>
+          <span class="trend down">▲ slowing</span>
+        </div>
+        <div class="tick-row">
+          <div class="tick-bar">
+            <div class="tick a"></div><div class="tick a"></div><div class="tick a"></div><div class="tick a"></div>
+            <div class="tick a"></div><div class="tick a"></div><div class="tick a"></div><div class="tick a"></div>
+            <div class="tick a"></div><div class="tick a"></div><div class="tick a"></div><div class="tick a"></div>
+            <div class="tick a"></div><div class="tick a"></div><div class="tick a"></div><div class="tick a"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+          </div>
+          <svg width="50" height="16" viewBox="0 0 50 16" style="flex-shrink:0">
+            <polyline points="0,3 8,5 17,5 26,8 34,9 43,12 50,14"
+              fill="none" stroke="#b45309" stroke-width="1.5"
+              stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="card-tags">
+          <span class="tag type">Long Run</span>
+          <span class="tag date">Last run May 8</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Danger -->
+      <div class="shoe-card">
+        <div class="card-status-line danger">Replace now · 103%</div>
+        <div class="card-name">Hoka Clifton 9</div>
+        <div class="card-stats">
+          <div><span class="stat-num">668</span><span class="stat-label">Kilometres</span></div>
+          <div><span class="stat-num">91</span><span class="stat-label">Runs</span></div>
+          <div><span class="stat-num sm">5:44</span><span class="stat-label">Avg pace</span></div>
+        </div>
+        <div class="card-km-row">
+          <span><strong>668</strong> / 650 km</span>
+          <span class="trend down">▲ slowing</span>
+        </div>
+        <div class="tick-row">
+          <div class="tick-bar">
+            <div class="tick r"></div><div class="tick r"></div><div class="tick r"></div><div class="tick r"></div>
+            <div class="tick r"></div><div class="tick r"></div><div class="tick r"></div><div class="tick r"></div>
+            <div class="tick r"></div><div class="tick r"></div><div class="tick r"></div><div class="tick r"></div>
+            <div class="tick r"></div><div class="tick r"></div><div class="tick r"></div><div class="tick r"></div>
+            <div class="tick r"></div><div class="tick r"></div><div class="tick r"></div><div class="tick r"></div>
+          </div>
+          <svg width="50" height="16" viewBox="0 0 50 16" style="flex-shrink:0">
+            <polyline points="0,2 8,4 17,6 26,9 34,11 43,13 50,15"
+              fill="none" stroke="#b91c1c" stroke-width="1.5"
+              stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="card-tags">
+          <span class="tag type">Recovery</span>
+          <span class="tag date">Last run May 6</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Fresh -->
+      <div class="shoe-card">
+        <div class="card-status-line good">Good · 14%</div>
+        <div class="card-name">Puma Velocity Nitro 2</div>
+        <div class="card-stats">
+          <div><span class="stat-num">89</span><span class="stat-label">Kilometres</span></div>
+          <div><span class="stat-num">14</span><span class="stat-label">Runs</span></div>
+          <div><span class="stat-num sm">4:58</span><span class="stat-label">Avg pace</span></div>
+        </div>
+        <div class="card-km-row">
+          <span><strong>89</strong> / 650 km</span>
+          <span class="trend up">▼ getting faster</span>
+        </div>
+        <div class="tick-row">
+          <div class="tick-bar">
+            <div class="tick g"></div><div class="tick g"></div><div class="tick g"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+            <div class="tick e"></div><div class="tick e"></div><div class="tick e"></div><div class="tick e"></div>
+            <div class="tick e"></div>
+          </div>
+          <svg width="50" height="16" viewBox="0 0 50 16" style="flex-shrink:0">
+            <polyline points="0,12 17,9 34,7 50,4"
+              fill="none" stroke="#16a34a" stroke-width="1.5"
+              stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="card-tags">
+          <span class="tag type">Speed / Tempo</span>
+          <span class="tag idle">Idle 18d</span>
+        </div>
+      </div>
+
+    </div><!-- /shoe-grid -->
+
+    <!-- ── Hall of Fame ─────────────────────────────────────────────────────── -->
+    <section class="hof-section">
+      <div class="hof-divider">
+        <div class="hof-rule"></div>
+        <span class="hof-label">Hall of Fame</span>
+        <div class="hof-rule"></div>
+      </div>
+      <div class="hof-table">
+        <div class="hof-row">
+          <div class="hof-tombstone">👟</div>
+          <div>
+            <div class="hof-name">Brooks Ghost 14</div>
+            <div class="hof-dates">Jan 2023 – Nov 2024 · Daily Trainer</div>
+          </div>
+          <div class="hof-km">
+            <span class="hof-km-num">823</span><span class="hof-km-unit">km</span>
+            <div class="hof-runs">107 runs</div>
+          </div>
+        </div>
+        <div class="hof-row">
+          <div class="hof-tombstone">👟</div>
+          <div>
+            <div class="hof-name">Nike Vaporfly Next%</div>
+            <div class="hof-dates">Mar 2022 – Jun 2023 · Race Day</div>
+          </div>
+          <div class="hof-km">
+            <span class="hof-km-num">412</span><span class="hof-km-unit">km</span>
+            <div class="hof-runs">38 runs</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Leaderboard ──────────────────────────────────────────────────────── -->
+    <section class="lb-section">
+      <div class="section-head" style="margin-bottom:28px">
+        <h2 class="section-title">Fleet <em>leaderboard</em></h2>
+      </div>
+
+      <!-- Two ranking tables side by side -->
+      <div class="lb-grid">
+        <div class="lb-board">
+          <div class="lb-board-label">Top Pace — median min/km</div>
+          <div class="lb-row">
+            <span class="lb-pos p1">1</span>
+            <span class="lb-shoe">Puma Velocity Nitro 2</span>
+            <span class="lb-val">4:58<span class="lb-unit">min/km</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">2</span>
+            <span class="lb-shoe">Nike Pegasus 41</span>
+            <span class="lb-val">5:12<span class="lb-unit">min/km</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">3</span>
+            <span class="lb-shoe">ASICS Gel-Kayano 31</span>
+            <span class="lb-val">5:31<span class="lb-unit">min/km</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">4</span>
+            <span class="lb-shoe">Hoka Clifton 9</span>
+            <span class="lb-val">5:44<span class="lb-unit">min/km</span></span>
+          </div>
+        </div>
+
+        <div class="lb-board">
+          <div class="lb-board-label">Lowest Average HR — bpm</div>
+          <div class="lb-row">
+            <span class="lb-pos p1">1</span>
+            <span class="lb-shoe">Nike Pegasus 41</span>
+            <span class="lb-val">142<span class="lb-unit">bpm</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">2</span>
+            <span class="lb-shoe">Puma Velocity Nitro 2</span>
+            <span class="lb-val">148<span class="lb-unit">bpm</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">3</span>
+            <span class="lb-shoe">ASICS Gel-Kayano 31</span>
+            <span class="lb-val">155<span class="lb-unit">bpm</span></span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-pos">4</span>
+            <span class="lb-shoe">Hoka Clifton 9</span>
+            <span class="lb-val">161<span class="lb-unit">bpm</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Awards table -->
+      <div class="awards-label">Awards</div>
+      <div class="awards-grid">
+        <div class="award-cell">
+          <div class="award-cat">Long Run King</div>
+          <div class="award-name">ASICS Gel-Kayano 31</div>
+          <div class="award-stat">32.4 km longest</div>
+        </div>
+        <div class="award-cell">
+          <div class="award-cat">Speed Demon</div>
+          <div class="award-name">Puma Velocity Nitro 2</div>
+          <div class="award-stat">4:22 min/km fastest</div>
+        </div>
+        <div class="award-cell">
+          <div class="award-cat">Most Reliable</div>
+          <div class="award-name">Nike Pegasus 41</div>
+          <div class="award-stat">52 runs, no gaps</div>
+        </div>
+        <div class="award-cell">
+          <div class="award-cat">Freshest Legs</div>
+          <div class="award-name">Puma Velocity Nitro 2</div>
+          <div class="award-stat">89 km, still new</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <strong>Shoe411</strong> &nbsp;·&nbsp; Know Your Kicks &nbsp;·&nbsp; Powered by Strava
+    </div>
+
+  </div><!-- /main -->
+
+  <div class="flag">Mockup · <em>Green / Tufte</em></div>
+
+</body>
+</html>
